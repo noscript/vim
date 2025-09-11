@@ -1143,6 +1143,8 @@ curs_columns(
     long	siso = get_sidescrolloff_value();
     int		did_sub_skipcol = FALSE;
 
+    curwin->w_width -= curwin->w_p_rmar;
+
     /*
      * First make sure that w_topline is valid (after moving the cursor).
      */
@@ -1426,6 +1428,8 @@ curs_columns(
     curwin->w_valid_skipcol = curwin->w_skipcol;
 
     curwin->w_valid |= VALID_WCOL|VALID_WROW|VALID_VIRTCOL;
+
+    curwin->w_width += curwin->w_p_rmar;
 }
 
 #if (defined(FEAT_EVAL) || defined(FEAT_PROP_POPUP)) || defined(PROTO)

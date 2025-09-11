@@ -3032,6 +3032,8 @@ mouse_comp_pos(
     int		off;
     int		count;
 
+    win->w_width -= win->w_p_rmar;
+
 #ifdef FEAT_RIGHTLEFT
     if (win->w_p_rl)
 	col = win->w_width - 1 - col;
@@ -3136,6 +3138,9 @@ mouse_comp_pos(
     *colp = col;
     *rowp = row;
     *lnump = lnum;
+
+    win->w_width += win->w_p_rmar;
+
     return retval;
 }
 

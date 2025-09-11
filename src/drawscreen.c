@@ -2209,6 +2209,8 @@ win_update(win_T *wp)
     }
 #endif
 
+    wp->w_width -= wp->w_p_rmar;
+
     // Update all the window rows.
     idx = 0;		// first entry in w_lines[].wl_size
     row = 0;
@@ -2592,6 +2594,8 @@ win_update(win_T *wp)
 	if (idx >= Rows)
 	    break;
     }
+
+    wp->w_width += wp->w_p_rmar;
 
     // End of loop over all window lines.
 

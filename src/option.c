@@ -6894,6 +6894,7 @@ get_varp(struct vimoption *p)
 #ifdef FEAT_SIGNS
 	case PV_SCL:	return (char_u *)&(curwin->w_p_scl);
 #endif
+	case PV_RMAR:	return (char_u *)&(curwin->w_p_rmar);
 #ifdef FEAT_VARTABS
 	case PV_VSTS:	return (char_u *)&(curbuf->b_p_vsts);
 	case PV_VTS:	return (char_u *)&(curbuf->b_p_vts);
@@ -7057,6 +7058,7 @@ copy_winopt(winopt_T *from, winopt_T *to)
     to->wo_cuc = from->wo_cuc;
     to->wo_cul = from->wo_cul;
     to->wo_culopt = copy_option_val(from->wo_culopt);
+    to->wo_rmar = from->wo_rmar;
     to->wo_cc = copy_option_val(from->wo_cc);
 #endif
 #ifdef FEAT_DIFF

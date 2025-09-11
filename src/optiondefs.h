@@ -241,6 +241,7 @@
 #ifdef FEAT_SIGNS
 # define PV_SCL		OPT_WIN(WV_SCL)
 #endif
+#define PV_RMAR		OPT_WIN(WV_RMAR)
 
 // WV_ and BV_ values get typecasted to this for the "indir" field
 typedef enum
@@ -2200,6 +2201,9 @@ static struct vimoption options[] =
 			    (char_u *)NULL, PV_NONE, NULL, NULL,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},
+    {"rightmargin", "rmar", P_NUM|P_VI_DEF|P_RWIN,
+			    (char_u *)VAR_WIN, PV_RMAR, NULL, NULL,
+			    {(char_u *)0L, (char_u *)0L} SCTX_INIT},
     {"rightleft",   "rl",   P_BOOL|P_VI_DEF|P_RWIN,
 #ifdef FEAT_RIGHTLEFT
 			    (char_u *)VAR_WIN, PV_RL, NULL, NULL,
