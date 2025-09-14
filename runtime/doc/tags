@@ -917,6 +917,8 @@ $quote	eval.txt	/*$quote*
 'restorescreen'	options.txt	/*'restorescreen'*
 'revins'	options.txt	/*'revins'*
 'ri'	options.txt	/*'ri'*
+'rightmargin'	options.txt	/*'rightmargin'*
+'rmar'	options.txt	/*'rmar'*
 'rightleft'	options.txt	/*'rightleft'*
 'rightleftcmd'	options.txt	/*'rightleftcmd'*
 'rl'	options.txt	/*'rl'*
