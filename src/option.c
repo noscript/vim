@@ -6982,6 +6982,7 @@ get_varp(struct vimoption *p)
 #ifdef FEAT_SIGNS
 	case PV_SCL:	return (char_u *)&(curwin->w_p_scl);
 #endif
+	case PV_RMAR:	return (char_u *)&(curwin->w_p_rmar);
 #ifdef FEAT_VARTABS
 	case PV_VSTS:	return (char_u *)&(curbuf->b_p_vsts);
 	case PV_VTS:	return (char_u *)&(curbuf->b_p_vts);
