@@ -302,6 +302,8 @@ typedef struct
 # define w_p_cul w_onebuf_opt.wo_cul	// 'cursorline'
     char_u	*wo_culopt;
 # define w_p_culopt w_onebuf_opt.wo_culopt	// 'cursorlineopt'
+    long	wo_rmar;
+# define w_p_rmar w_onebuf_opt.wo_rmar	// 'rightmargin'
     char_u	*wo_cc;
 # define w_p_cc w_onebuf_opt.wo_cc	// 'colorcolumn'
 #endif

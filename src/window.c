@@ -4124,7 +4124,7 @@ frame_new_width(
 		break;
 	if (frp->fr_parent == NULL)
 	    wp->w_vsep_width = 0;
-	win_new_width(wp, width - wp->w_vsep_width);
+	win_new_width(wp, width - wp->w_p_rmar - wp->w_vsep_width);
     }
     else if (topfrp->fr_layout == FR_COL)
     {
@@ -4594,7 +4594,7 @@ win_init_size(void)
     firstwin->w_height = ROWS_AVAIL;
     firstwin->w_prev_height = ROWS_AVAIL;
     topframe->fr_height = ROWS_AVAIL;
-    firstwin->w_width = topframe->fr_width;
+    firstwin->w_width = topframe->fr_width - firstwin->w_p_rmar;
 }
 
 /*
@@ -5814,7 +5814,7 @@ win_alloc(win_T *after, int hidden)
     if (!hidden)
 	win_append(after, new_wp);
     new_wp->w_wincol = TPL_LCOL();
-    new_wp->w_width = COLUMNS_WITHOUT_TPL();
+    new_wp->w_width = COLUMNS_WITHOUT_TPL() - new_wp->w_p_rmar;
 
     // position the display and the cursor at the top of the file.
     new_wp->w_topline = 1;
@@ -6338,7 +6338,7 @@ frame_comp_pos(frame_T *topfrp, int *row, int *col)
 	// WinBar will not show if the window height is zero
 	h = VISIBLE_HEIGHT(wp) + wp->w_status_height;
 	*row += h > topfrp->fr_height ? topfrp->fr_height : h;
-	*col += wp->w_width + wp->w_vsep_width;
+	*col += wp->w_width + wp->w_p_rmar + wp->w_vsep_width;
     }
     else
     {

@@ -443,6 +443,7 @@ win_redr_status(win_T *wp, int ignore_pum UNUSED)
 	return;
     busy = TRUE;
 
+    wp->w_width += wp->w_p_rmar;
     row = statusline_row(wp);
 
     wp->w_redr_status = FALSE;
@@ -571,6 +572,7 @@ win_redr_status(win_T *wp, int ignore_pum UNUSED)
 	screen_putchar(fillchar, row, W_ENDCOL(wp), attr);
     }
     busy = FALSE;
+    wp->w_width -= wp->w_p_rmar;
 }
 
 #ifdef FEAT_STL_OPT
@@ -609,6 +611,7 @@ showruler(int always)
 	curwin->w_redr_status = TRUE;
 	return;
     }
+    curwin->w_width += curwin->w_p_rmar;
 #if defined(FEAT_STL_OPT)
     if ((*p_stl != NUL || *curwin->w_p_stl != NUL) && curwin->w_status_height)
 	redraw_custom_statusline(curwin);
@@ -632,6 +635,7 @@ showruler(int always)
     if (redraw_tabpanel)
 	draw_tabpanel();
 #endif
+    curwin->w_width -= curwin->w_p_rmar;
 }
 
     void

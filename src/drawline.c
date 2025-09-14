@@ -876,7 +876,7 @@ wlv_screen_line(win_T *wp, winlinevars_T *wlv, int clear_end)
     }
 
     screen_line(wp, wlv->screen_row, wp->w_wincol, wlv->col,
-		    clear_end ? wp->w_width : -wp->w_width,
+		    clear_end ? wp->w_width + wp->w_p_rmar : -wp->w_width,
 		    wlv->vcol - 1, wlv->screen_line_flags);
 }
 
