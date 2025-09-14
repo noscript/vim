@@ -7139,6 +7139,12 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This is useful for languages such as Hebrew, Arabic and Farsi.
 	The 'rightleft' option must be set for 'rightleftcmd' to take effect.
 
+						*'rightmargin'* *'rmar'*
+'rightmargin' 'rmar'	number (default 0)
+			local to window
+	When non-zero, a column with the specified width is shown at the right
+	side of the window, reducing the width of visible text.
+
 						*'rubydll'*
 'rubydll'		string	(default: depends on the build)
 			global
@@ -10272,8 +10278,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Number of characters from the right window border where wrapping
 	starts.  When typing text beyond this limit, an <EOL> will be inserted
 	and inserting continues on the next line.
-	Options that add a margin, such as 'number' and 'foldcolumn', cause
-	the text width to be further reduced.  This is Vi compatible.
+	Options that add a margin, such as 'number', 'foldcolumn' and
+	'rightmargin', cause the text width to be further reduced.  This is Vi
+	compatible.
 	When 'textwidth' is non-zero, this option is not used.
 	This option is set to 0 when 'paste' is set and restored when 'paste'
 	is reset.
