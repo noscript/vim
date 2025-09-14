@@ -7138,6 +7138,12 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This is useful for languages such as Hebrew, Arabic and Farsi.
 	The 'rightleft' option must be set for 'rightleftcmd' to take effect.
 
+'rightmargin' 'rmar'	number (default 0)
+			local to window
+	Number of columns of empty space on the right side of the window,
+	reduces the width of visible text.  The empty space can be used for
+	popups.
+
 						*'rubydll'*
 'rubydll'		string	(default: depends on the build)
 			global
