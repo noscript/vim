@@ -166,7 +166,7 @@ screen_fill_end(
     if (wp->w_p_rl)
     {
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
-		W_ENDCOL(wp) - nn, (int)W_ENDCOL(wp) - off,
+		W_ENDCOL(wp) - nn + wp->w_p_rmar, (int)W_ENDCOL(wp) - off + wp->w_p_rmar,
 		c1, c2, attr);
     }
     else
@@ -227,7 +227,9 @@ win_draw_end(
     if (wp->w_p_rl)
     {
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
-		wp->w_wincol, W_ENDCOL(wp) - 1 - n, c2, c2, attr);
+		wp->w_wincol, wp->w_wincol + wp->w_p_rmar, ' ', ' ', draw_margin ? win_attr : attr);
+	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
+		wp->w_wincol + wp->w_p_rmar, W_ENDCOL(wp) - 1 - n, c2, c2, attr);
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
 		W_ENDCOL(wp) - 1 - n, W_ENDCOL(wp) - n, c1, c2, attr);
     }
@@ -235,7 +237,9 @@ win_draw_end(
 #endif
     {
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
-		wp->w_wincol + n, (int)W_ENDCOL(wp), c1, c2, attr);
+		wp->w_wincol + n, (int)W_ENDCOL(wp) - wp->w_p_rmar, c1, c2, attr);
+	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
+		(int)W_ENDCOL(wp) - wp->w_p_rmar, (int)W_ENDCOL(wp), ' ', ' ', draw_margin ? win_attr : attr);
     }
 
     set_empty_rows(wp, row);
@@ -543,6 +547,7 @@ screen_line(
 					// 2: occupies two display cells
     bool	    override_success =
 	push_highlight_overrides(wp->w_hl, wp->w_hl_len);
+    int		    win_attr = get_win_attr(wp);
 
     // Check for illegal row and col, just in case.
     if (row >= Rows)
@@ -568,7 +573,7 @@ screen_line(
 	    int clear_start = col;
 
 	    while (col <= endcol && ScreenLines[off_to] == ' '
-		    && ScreenAttrs[off_to] == 0
+		    && ScreenAttrs[off_to] == win_attr
 				  && (!enc_utf8 || ScreenLinesUC[off_to] == 0))
 	    {
 		++off_to;
@@ -576,7 +581,7 @@ screen_line(
 	    }
 	    if (col <= endcol)
 		screen_fill(row, row + 1, col + coloff,
-					    endcol + coloff + 1, ' ', ' ', 0);
+					    endcol + coloff + 1, ' ', ' ', win_attr);
 
 	    for (int i = endcol; i >= clear_start; i--)
 		ScreenCols[off_to + (i - col)] =
@@ -1039,7 +1044,7 @@ skip_opacity:
 
 	// blank out the rest of the line
 	while (col < clear_width && ScreenLines[off_to] == ' '
-						  && ScreenAttrs[off_to] == 0
+						  && ScreenAttrs[off_to] == win_attr
 				  && (!enc_utf8 || ScreenLinesUC[off_to] == 0))
 	{
 	    ScreenCols[off_to] =
@@ -1095,7 +1100,7 @@ skip_opacity:
 	    }
 #endif
 	    screen_fill(row, row + 1, col + coloff, clear_width + coloff,
-								 ' ', ' ', 0);
+								 ' ', ' ', win_attr);
 	    while (col < clear_width)
 	    {
 		ScreenCols[off_to++]
