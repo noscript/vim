@@ -496,13 +496,13 @@ put_view(
 	}
 	else
 	{
-	    if (!wp->w_p_wrap && wp->w_leftcol > 0 && wp->w_width > 0)
+	    if (!wp->w_p_wrap && wp->w_leftcol > 0 && (wp->w_width - wp->w_p_rmar) > 0)
 	    {
 		if (fprintf(fd,
 			  "let s:c = %ld - ((%ld * winwidth(0) + %ld) / %ld)",
 			    (long)wp->w_virtcol + 1,
 			    (long)(wp->w_virtcol - wp->w_leftcol),
-			    (long)wp->w_width / 2, (long)wp->w_width) < 0
+			    (long)(wp->w_width - wp->w_p_rmar) / 2, (long)wp->w_width) < 0
 			|| put_eol(fd) == FAIL
 			|| put_line(fd, "if s:c > 0") == FAIL
 			|| fprintf(fd,

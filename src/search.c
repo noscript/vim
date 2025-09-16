@@ -2863,7 +2863,7 @@ showmatch(
 
     int col_visible = (curwin->w_p_wrap
 	    || (vcol >= curwin->w_leftcol
-		&& vcol < curwin->w_leftcol + curwin->w_width));
+		&& vcol < curwin->w_leftcol + curwin->w_width - curwin->w_p_rmar));
     if (!col_visible)
 	return;
 
