@@ -3213,8 +3213,8 @@ jump_to_help_window(qf_info_T *qi, int newwin, int *opened_window)
 	// Split off help window; put it at far top if no position
 	// specified, the current window is vertically split and narrow.
 	flags = WSP_HELP;
-	if (cmdmod.cmod_split == 0 && curwin->w_width != Columns
-		&& curwin->w_width < 80)
+	if (cmdmod.cmod_split == 0 && (curwin->w_width - curwin->w_p_rmar) != Columns
+		&& (curwin->w_width - curwin->w_p_rmar) < 80)
 	    flags |= WSP_TOP;
 	// If the user asks to open a new window, then copy the location list.
 	// Otherwise, don't copy the location list.
@@ -4553,7 +4553,7 @@ qf_goto_cwindow(qf_info_T *qi, int resize, int sz, int vertsplit)
     {
 	if (vertsplit)
 	{
-	    if (sz != win->w_width)
+	    if (sz != (win->w_width - win->w_p_rmar))
 		win_setwidth(sz);
 	}
 	else if (sz != win->w_height && win->w_height
@@ -4652,7 +4652,7 @@ qf_open_new_cwindow(qf_info_T *qi, int height)
 
     // Only set the height when still in the same tab page and there is no
     // window to the side.
-    if (curtab == prevtab && curwin->w_width == Columns)
+    if (curtab == prevtab && (curwin->w_width - curwin->w_p_rmar) == Columns)
 	win_setheight(height);
     curwin->w_p_wfh = TRUE;	    // set 'winfixheight'
     if (win_valid(win))
