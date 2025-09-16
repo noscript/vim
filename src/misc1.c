@@ -370,7 +370,7 @@ plines_win_nofill(
 #endif
     int		lines;
 
-    if (wp->w_width == 0)
+    if (wp->w_width - wp->w_p_rmar == 0)
 	return 1;
 
 #ifdef FEAT_FOLDING
@@ -427,7 +427,7 @@ plines_win_nofold(win_T *wp, linenr_T lnum)
     /*
      * Add column offset for 'number', 'relativenumber' and 'foldcolumn'.
      */
-    width = wp->w_width - win_col_off(wp);
+    width = wp->w_width - wp->w_p_rmar - win_col_off(wp);
     if (width <= 0)
 	return 32000;
     if (col <= width)
@@ -459,7 +459,7 @@ plines_win_col(win_T *wp, linenr_T lnum, long column)
     if (!wp->w_p_wrap)
 	return lines + 1;
 
-    if (wp->w_width == 0)
+    if (wp->w_width - wp->w_p_rmar == 0)
 	return lines + 1;
 
     line = ml_get_buf(wp->w_buffer, lnum, FALSE);
@@ -487,7 +487,7 @@ plines_win_col(win_T *wp, linenr_T lnum, long column)
     /*
      * Add column offset for 'number', 'relativenumber', 'foldcolumn', etc.
      */
-    width = wp->w_width - win_col_off(wp);
+    width = wp->w_width - wp->w_p_rmar - win_col_off(wp);
     if (width <= 0)
 	return 9999;
 

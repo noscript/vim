@@ -801,7 +801,7 @@ check_auto_format(
 /*
  * Find out textwidth to be used for formatting:
  *	if 'textwidth' option is set, use it
- *	else if 'wrapmargin' option is set, use curwin->w_width - 'wrapmargin'
+ *	else if 'wrapmargin' option is set, use (curwin->w_width - curwin->w_p_rmar) - 'wrapmargin'
  *	if invalid value, use 0.
  *	Set default to window width (maximum 79) for "gq" operator.
  */
@@ -816,7 +816,7 @@ comp_textwidth(
     {
 	// The width is the window width minus 'wrapmargin' minus all the
 	// things that add to the margin.
-	textwidth = curwin->w_width - curbuf->b_p_wm;
+	textwidth = curwin->w_width - curwin->w_p_rmar - curbuf->b_p_wm;
 	if (curbuf == cmdwin_buf)
 	    textwidth -= 1;
 #ifdef FEAT_FOLDING
@@ -833,7 +833,7 @@ comp_textwidth(
 	textwidth = 0;
     if (ff && textwidth == 0)
     {
-	textwidth = curwin->w_width - 1;
+	textwidth = curwin->w_width - curwin->w_p_rmar - 1;
 	if (textwidth > 79)
 	    textwidth = 79;
     }
