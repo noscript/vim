@@ -223,7 +223,9 @@ win_draw_end(
 #endif
     {
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
-		wp->w_wincol + n, (int)W_ENDCOL(wp), c1, c2, attr);
+		wp->w_wincol + n, (int)W_ENDCOL(wp) - wp->w_p_rmar, c1, c2, attr);
+	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
+		(int)W_ENDCOL(wp) - wp->w_p_rmar, (int)W_ENDCOL(wp), ' ', ' ', attr);
     }
 
     set_empty_rows(wp, row);
@@ -3238,7 +3240,7 @@ setcursor_mayforce(int force)
 #ifdef FEAT_RIGHTLEFT
 		// With 'rightleft' set and the cursor on a double-wide
 		// character, position it on the leftmost column.
-		curwin->w_p_rl ? ((int)curwin->w_width - curwin->w_wcol
+		curwin->w_p_rl ? ((int)(curwin->w_width - curwin->w_p_rmar) - curwin->w_wcol
 		    - ((has_mbyte
 			   && (*mb_ptr2cells)(ml_get_cursor()) == 2
 			   && vim_isprintc(gchar_cursor())) ? 2 : 1)) :
