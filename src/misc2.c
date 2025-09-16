@@ -687,7 +687,7 @@ set_leftcol(colnr_T leftcol)
     curwin->w_leftcol = leftcol;
 
     changed_cline_bef_curs();
-    long lastcol = curwin->w_leftcol + curwin->w_width - curwin_col_off() - 1;
+    long lastcol = curwin->w_leftcol + curwin->w_width - curwin->w_p_rmar - curwin_col_off() - 1;
     validate_virtcol();
 
     // If the cursor is right or left of the screen, move it to last or first

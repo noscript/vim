@@ -1736,7 +1736,7 @@ edit_putchar(int c, int highlight)
 #ifdef FEAT_RIGHTLEFT
     if (curwin->w_p_rl)
     {
-	pc_col += curwin->w_width - 1 - curwin->w_wcol;
+	pc_col += curwin->w_width - curwin->w_p_rmar - 1 - curwin->w_wcol;
 	if (has_mbyte)
 	{
 	    int fix_col = mb_fix_col(pc_col, pc_row);

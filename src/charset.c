@@ -1323,7 +1323,7 @@ win_lbr_chartabsize(
 			int n_extra = (int)STRLEN(p);
 
 			cells = text_prop_position(wp, tp, vcol,
-			     (vcol + size) % (wp->w_width - col_off) + col_off,
+			     (vcol + size) % (wp->w_width - wp->w_p_rmar - col_off) + col_off,
 					      &n_extra, &p, NULL, NULL, FALSE);
 #  ifdef FEAT_LINEBREAK
 			if (text_prop_no_showbreak(tp))
@@ -1379,7 +1379,7 @@ win_lbr_chartabsize(
     if (size > 0 && wp->w_p_wrap && (*sbr != NUL || wp->w_p_bri))
     {
 	int	col_off_prev = win_col_off(wp);
-	int	width2 = wp->w_width - col_off_prev + win_col_off2(wp);
+	int	width2 = wp->w_width - wp->w_p_rmar - col_off_prev + win_col_off2(wp);
 	colnr_T	wcol = vcol + col_off_prev;
 #  ifdef FEAT_PROP_POPUP
 	wcol -= wp->w_virtcol_first_char;
@@ -1389,10 +1389,10 @@ win_lbr_chartabsize(
 
 	// cells taken by 'showbreak'/'breakindent' before current char
 	int	head_prev = 0;
-	if (wcol >= wp->w_width)
+	if (wcol >= wp->w_width - wp->w_p_rmar)
 	{
-	    wcol -= wp->w_width;
-	    col_off_prev = wp->w_width - width2;
+	    wcol -= wp->w_width - wp->w_p_rmar;
+	    col_off_prev = wp->w_width - wp->w_p_rmar - width2;
 	    if (wcol >= width2 && width2 > 0)
 		wcol %= width2;
 	    if (*sbr != NUL)
@@ -1416,7 +1416,7 @@ win_lbr_chartabsize(
 	    wcol += col_off_prev;
 	}
 
-	if (wcol + size > wp->w_width)
+	if (wcol + size > wp->w_width - wp->w_p_rmar)
 	{
 	    // cells taken by 'showbreak'/'breakindent' halfway current char
 	    int	head_mid = 0;
@@ -1431,7 +1431,7 @@ win_lbr_chartabsize(
 	    if (head_mid > 0)
 	    {
 		// Calculate effective window width.
-		int prev_rem = wp->w_width - wcol;
+		int prev_rem = wp->w_width - wp->w_p_rmar - wcol;
 		int width = width2 - head_mid;
 
 		if (width <= 0)
@@ -1470,7 +1470,7 @@ win_lbr_chartabsize(
      * If 'linebreak' set check at a blank before a non-blank if the line
      * needs a break here.
      */
-    if (wp->w_p_lbr && wp->w_p_wrap && wp->w_width != 0
+    if (wp->w_p_lbr && wp->w_p_wrap && wp->w_width - wp->w_p_rmar != 0
 	    && VIM_ISBREAK((int)s[0]) && !VIM_ISBREAK((int)s[1]))
     {
 	char_u	*t = cts->cts_line;
@@ -1487,7 +1487,7 @@ win_lbr_chartabsize(
 	 */
 	int numberextra = win_col_off(wp);
 	colnr_T col_adj = size - 1;
-	colnr_T colmax = (colnr_T)(wp->w_width - numberextra - col_adj);
+	colnr_T colmax = (colnr_T)(wp->w_width - wp->w_p_rmar - numberextra - col_adj);
 	if (vcol >= colmax)
 	{
 	    colmax += col_adj;
@@ -1574,9 +1574,9 @@ in_win_border(win_T *wp, colnr_T vcol)
     int		width1;		// width of first line (after line number)
     int		width2;		// width of further lines
 
-    if (wp->w_width == 0)	// there is no border
+    if (wp->w_width - wp->w_p_rmar < 0)	// there is no border
 	return FALSE;
-    width1 = wp->w_width - win_col_off(wp);
+    width1 = wp->w_width - wp->w_p_rmar - win_col_off(wp);
     if ((int)vcol < width1 - 1)
 	return FALSE;
     if ((int)vcol == width1 - 1)
