@@ -148,8 +148,8 @@ ex_help(exarg_T *eap)
 	    // specified, the current window is vertically split and
 	    // narrow.
 	    n = WSP_HELP;
-	    if (cmdmod.cmod_split == 0 && curwin->w_width != Columns
-						  && curwin->w_width < 80)
+	    if (cmdmod.cmod_split == 0 && (curwin->w_width - curwin->w_p_rmar) != Columns
+						  && (curwin->w_width - curwin->w_p_rmar) < 80)
 		n |= p_sb ? WSP_BOT : WSP_TOP;
 	    if (win_split(0, n) == FAIL)
 		goto erret;

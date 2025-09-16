@@ -159,12 +159,12 @@ coladvance2(
     }
     else
     {
-	int		width = curwin->w_width - win_col_off(curwin);
+	int		width = curwin->w_width - curwin->w_p_rmar - win_col_off(curwin);
 	chartabsize_T	cts;
 
 	if (finetune
 		&& curwin->w_p_wrap
-		&& curwin->w_width != 0
+		&& (curwin->w_width - curwin->w_p_rmar) != 0
 		&& wcol >= (colnr_T)width
 		&& width > 0)
 	{
@@ -313,7 +313,7 @@ coladvance2(
 	    int b = (int)wcol - (int)col;
 
 	    // The difference between wcol and col is used to set coladd.
-	    if (b > 0 && b < (MAXCOL - 2 * curwin->w_width))
+	    if (b > 0 && b < (MAXCOL - 2 * (curwin->w_width - curwin->w_p_rmar)))
 		pos->coladd = b;
 
 	    col += b;
@@ -687,7 +687,7 @@ set_leftcol(colnr_T leftcol)
     curwin->w_leftcol = leftcol;
 
     changed_cline_bef_curs();
-    long lastcol = curwin->w_leftcol + curwin->w_width - curwin_col_off() - 1;
+    long lastcol = curwin->w_leftcol + curwin->w_width - curwin->w_p_rmar - curwin_col_off() - 1;
     validate_virtcol();
 
     // If the cursor is right or left of the screen, move it to last or first

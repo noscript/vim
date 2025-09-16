@@ -299,7 +299,7 @@ set_term_and_win_size(term_T *term, jobopt_T *opt)
     }
 #endif
     term->tl_rows = curwin->w_height;
-    term->tl_cols = curwin->w_width;
+    term->tl_cols = curwin->w_width - curwin->w_p_rmar;
 
     minsize = parse_termwinsize(curwin, &rows, &cols);
     if (minsize)
@@ -322,7 +322,7 @@ set_term_and_win_size(term_T *term, jobopt_T *opt)
     {
 	if (term->tl_rows != curwin->w_height)
 	    win_setheight_win(term->tl_rows, curwin);
-	if (term->tl_cols != curwin->w_width)
+	if (term->tl_cols != curwin->w_width - curwin->w_p_rmar)
 	    win_setwidth_win(term->tl_cols, curwin);
 
 	// Set 'winsize' now to avoid a resize at the next redraw.
@@ -1318,7 +1318,7 @@ term_write_job_output(term_T *term, char_u *msg_arg, size_t len_arg)
 position_cursor(win_T *wp, VTermPos *pos)
 {
     wp->w_wrow = MIN(pos->row, MAX(0, wp->w_height - 1));
-    wp->w_wcol = MIN(pos->col, MAX(0, wp->w_width - 1));
+    wp->w_wcol = MIN(pos->col, MAX(0, wp->w_width - wp->w_p_rmar - 1));
 #ifdef FEAT_PROP_POPUP
     if (popup_is_popup(wp))
     {
@@ -4109,7 +4109,7 @@ term_update_window(win_T *wp)
     {
 	if (pos.row < term->tl_rows)
 	{
-	    int max_col = MIN(wp->w_width, term->tl_cols);
+	    int max_col = MIN(wp->w_width - wp->w_p_rmar, term->tl_cols);
 
 	    term_line2screenline(term, wp, screen, &pos, max_col);
 	}
@@ -4120,7 +4120,7 @@ term_update_window(win_T *wp)
 #ifdef FEAT_MENU
 				+ winbar_height(wp)
 #endif
-				, wp->w_wincol, pos.col, wp->w_width, -1,
+				, wp->w_wincol, pos.col, wp->w_width - wp->w_p_rmar, -1,
 #ifdef FEAT_PROP_POPUP
 				popup_is_popup(wp) ? SLF_POPUP :
 #endif
@@ -5639,7 +5639,7 @@ read_dump_file(FILE *fd, VTermPos *cursor_pos)
     static char_u *
 get_separator(int text_width, char_u *fname)
 {
-    int	    width = MAX(text_width, curwin->w_width);
+    int	    width = MAX(text_width, curwin->w_width - curwin->w_p_rmar);
     char_u  *textline;
     int	    fname_size;
     char_u  *p = fname;

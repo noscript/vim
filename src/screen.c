@@ -150,8 +150,8 @@ screen_fill_end(
 {
     int	    nn = off + width;
 
-    if (nn > wp->w_width)
-	nn = wp->w_width;
+    if (nn > wp->w_width - wp->w_p_rmar)
+	nn = wp->w_width - wp->w_p_rmar;
 #ifdef FEAT_RIGHTLEFT
     if (wp->w_p_rl)
     {
@@ -238,7 +238,7 @@ win_draw_end(
 compute_foldcolumn(win_T *wp, int col)
 {
     int wmw = wp == curwin && p_wmw == 0 ? 1 : p_wmw;
-    int n = wp->w_width - (col + wmw);
+    int n = wp->w_width - wp->w_p_rmar - (col + wmw);
 
     return MIN(wp->w_p_fdc, n);
 }
@@ -3238,7 +3238,7 @@ setcursor_mayforce(int force)
 #ifdef FEAT_RIGHTLEFT
 		// With 'rightleft' set and the cursor on a double-wide
 		// character, position it on the leftmost column.
-		curwin->w_p_rl ? ((int)curwin->w_width - curwin->w_wcol
+		curwin->w_p_rl ? ((int)(curwin->w_width - curwin->w_p_rmar) - curwin->w_wcol
 		    - ((has_mbyte
 			   && (*mb_ptr2cells)(ml_get_cursor()) == 2
 			   && vim_isprintc(gchar_cursor())) ? 2 : 1)) :

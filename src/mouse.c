@@ -1206,7 +1206,7 @@ do_mousescroll(cmdarg_T *cap)
     {
 	// Horizontal scrolling
 	long step = (mouse_hor_step < 0 || shift_or_ctrl)
-					    ? curwin->w_width : mouse_hor_step;
+					    ? curwin->w_width - curwin->w_p_rmar : mouse_hor_step;
 	long leftcol = curwin->w_leftcol
 				     + (cap->arg == MSCR_RIGHT ? -step : step);
 	if (leftcol < 0)
@@ -1866,7 +1866,7 @@ retnomove:
 #ifdef FEAT_FOLDING
 			&& (
 # ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? col < wp->w_width - wp->w_p_fdc :
+			    wp->w_p_rl ? col < wp->w_width - wp->w_p_rmar - wp->w_p_fdc :
 # endif
 			    col >= wp->w_p_fdc + (wp != cmdwin_win ? 0 : 1)
 			    )
@@ -2117,7 +2117,7 @@ retnomove:
     // Check for position outside of the fold column.
     if (
 # ifdef FEAT_RIGHTLEFT
-	    curwin->w_p_rl ? col < curwin->w_width - curwin->w_p_fdc :
+	    curwin->w_p_rl ? col < curwin->w_width - curwin->w_p_rmar - curwin->w_p_fdc :
 # endif
 	    col >= curwin->w_p_fdc + (cmdwin_win != curwin ? 0 : 1)
        )
@@ -3034,7 +3034,7 @@ mouse_comp_pos(
 
 #ifdef FEAT_RIGHTLEFT
     if (win->w_p_rl)
-	col = win->w_width - 1 - col;
+	col = win->w_width - win->w_p_rmar - 1 - col;
 #endif
 
     lnum = win->w_topline;
@@ -3073,7 +3073,7 @@ mouse_comp_pos(
 
 	if (win->w_skipcol > 0 && lnum == win->w_topline)
 	{
-	    int width1 = win->w_width - win_col_off(win);
+	    int width1 = win->w_width - win->w_p_rmar - win_col_off(win);
 
 	    if (width1 > 0)
 	    {
@@ -3111,7 +3111,7 @@ mouse_comp_pos(
 	off = win_col_off(win) - win_col_off2(win);
 	if (col < off)
 	    col = off;
-	col += row * (win->w_width - off);
+	col += row * (win->w_width - win->w_p_rmar - off);
 
 	// Add skip column for the topline.
 	if (lnum == win->w_topline)
