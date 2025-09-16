@@ -64,7 +64,7 @@ margin_columns_win(win_T *wp, int *left_col, int *right_col)
     int	width1;
     int	width2;
 
-    width1 = wp->w_width - cur_col_off;
+    width1 = W_WIDTH_INNER(wp) - cur_col_off;
     width2 = width1 + win_col_off2(wp);
 
     if (saved_w_virtcol == wp->w_virtcol && prev_wp == wp
@@ -580,10 +580,10 @@ handle_showbreak_and_filler(win_T *wp, winlinevars_T *wlv)
 	}
 #  ifdef FEAT_RIGHTLEFT
 	if (wp->w_p_rl)
-	    wlv->n_extra = wlv->col + 1;
+	    wlv->n_extra = wlv->col - wp->w_p_rmar + 1;
 	else
 #  endif
-	    wlv->n_extra = wp->w_width - wlv->col;
+	    wlv->n_extra = W_WIDTH_INNER(wp) - wlv->col;
 	wlv->char_attr = HL_ATTR(HLF_DED);
     }
 # endif
@@ -637,14 +637,14 @@ textprop_size_after_trunc(
 	int	*n_used_ptr)
 {
     int	space = (flags & (TP_FLAG_ALIGN_BELOW | TP_FLAG_ALIGN_ABOVE))
-				       ? wp->w_width - win_col_off(wp) : added;
+				  ? W_WIDTH_INNER(wp) - win_col_off(wp) : added;
     int strsize = 0;
     char_u *p;
 
     // if the remaining size is too small and 'wrap' is set we wrap anyway and
     // use the next line
     if (space < PROP_TEXT_MIN_CELLS && wp->w_p_wrap)
-	space += wp->w_width;
+	space += W_WIDTH_INNER(wp);
     if (flags & (TP_FLAG_ALIGN_BELOW | TP_FLAG_ALIGN_ABOVE))
 	space -= padding;
 
@@ -687,7 +687,7 @@ text_prop_position(
     int	    wrap = tp->tp_col < MAXCOL || (tp->tp_flags & TP_FLAG_WRAP);
     int	    padding = tp->tp_col == MAXCOL ? tp->tp_padleft : 0;
     int	    col_with_padding = scr_col + (below ? 0 : padding);
-    int	    room = wp->w_width - col_with_padding;
+    int	    room = W_WIDTH_INNER(wp) - col_with_padding;
     int	    before = room;	// spaces before the text
     int	    after = 0;		// spaces after the text
     int	    n_used = *n_extra;
@@ -703,7 +703,7 @@ text_prop_position(
 	if (above)
 	{
 	    before = 0;
-	    after = wp->w_width - cells - win_col_off(wp) - padding;
+	    after = W_WIDTH_INNER(wp) - cells - win_col_off(wp) - padding;
 	    if (after < 0)
 	    {
 		// text "above" has too much padding to fit
@@ -719,7 +719,7 @@ text_prop_position(
 
 	    // Below-align: empty line add one character
 	    if (below && vcol == 0 && col_with_padding == col_off
-					    && wp->w_width - col_off == before)
+					    && W_WIDTH_INNER(wp) - col_off == before)
 		col_with_padding += 1;
 
 	    if (before < 0
@@ -731,7 +731,7 @@ text_prop_position(
 			      || (room < PROP_TEXT_MIN_CELLS && wp->w_p_wrap)))
 		{
 		    // right-align on next line instead of wrapping if possible
-		    before = wp->w_width - col_off - strsize + room;
+		    before = W_WIDTH_INNER(wp) - col_off - strsize + room;
 		    if (before < 0)
 			before = 0;
 		    else
@@ -770,6 +770,11 @@ text_prop_position(
 	    }
 	    else
 	    {
+		if (below && vcol == 0 && before > 0
+		    && (n_used < *n_extra ||
+			padding + cells >= W_WIDTH_INNER(wp) - win_col_off(wp))
+		    && before + padding + cells > W_WIDTH_INNER(wp) - win_col_off(wp))
+		    before = 0;
 		off = before + after + padding + n_used;
 		cells += before + after + padding;
 	    }
@@ -786,7 +791,7 @@ text_prop_position(
 
 			// change the last character to '…', converted to the
 			// current 'encoding'
-			STRCPY(buf, "…");
+			STRCPY(buf, "\342\200\246");
 			if (!enc_utf8)
 			{
 			    vimconv_T	vc;
@@ -809,7 +814,7 @@ text_prop_position(
 			lp -= (*mb_ptr2cells)(cp) - 1;
 			lp -= (*mb_head_off)(l, lp);
 			STRCPY(lp, cp);
-			n_used = lp - l + 3 - before - padding;
+			n_used = lp - l + STRLEN(cp) - before - padding;
 			if (cp != buf)
 			    vim_free(cp);
 		    }
@@ -883,13 +888,13 @@ wlv_screen_line(win_T *wp, winlinevars_T *wlv, int clear_end)
 	if (wp->w_p_nu && wp->w_p_rnu)
 	    // Do not overwrite the line number, change "123 text" to
 	    // "123<<<xt".
-	    while (skip < wp->w_width && VIM_ISDIGIT(ScreenLines[off]))
+	    while (skip < (W_WIDTH_INNER(wp)) && VIM_ISDIGIT(ScreenLines[off]))
 	    {
 		++off;
 		++skip;
 	    }
 
-	for (int i = 0; i < 3 && i + skip < wp->w_width; ++i)
+	for (int i = 0; i < 3 && i + skip < W_WIDTH_INNER(wp); ++i)
 	{
 	    if ((*mb_off2cells)(off, max_off) > 1)
 		// When the first half of a double-width character is
@@ -970,9 +975,9 @@ draw_screen_line(win_T *wp, winlinevars_T *wlv)
 
 	while (
 # ifdef FEAT_RIGHTLEFT
-		wp->w_p_rl ? (wlv->col >= 0) :
+		wp->w_p_rl ? (wlv->col >= wp->w_p_rmar) :
 # endif
-		(wlv->col < wp->w_width))
+		(wlv->col < W_WIDTH_INNER(wp)))
 	{
 	    ScreenLines[wlv->off] = ' ';
 	    if (enc_utf8)
@@ -1766,11 +1771,12 @@ win_line(
 	    // Text props "above" move the line number down to where the text
 	    // is.  Only count the ones that are visible, not those that are
 	    // skipped because of w_skipcol.
-	    int text_width = wp->w_width - win_col_off(wp);
+	    int text_width = W_WIDTH_INNER(wp) - win_col_off(wp);
 	    for (int i = text_prop_count - 1; i >= 0; --i)
 		if (text_props[i].tp_flags & TP_FLAG_ALIGN_ABOVE)
 		{
 		    if (lnum == wp->w_topline
+			    && text_width > 0
 			    && wp->w_skipcol - skipcol_in_text_prop_above
 								 >= text_width)
 		    {
@@ -2295,7 +2301,7 @@ win_line(
 				    && (tp->tp_flags & (TP_FLAG_ALIGN_RIGHT
 						| TP_FLAG_ALIGN_ABOVE
 						| TP_FLAG_ALIGN_BELOW)) == 0
-				    && wlv.col >= wp->w_width))
+				    && wlv.col >= W_WIDTH_INNER(wp)))
 			{
 			    if (tp->tp_col == MAXCOL
 				     && *ptr == NUL
@@ -2373,7 +2379,7 @@ win_line(
 			    }
 # endif
 			    if ((right || above || below || !wrap
-					    || padding > 0) && wp->w_width > 2)
+					    || padding > 0) && W_WIDTH_INNER(wp) > 2)
 			    {
 				char_u	*prev_p_extra = wlv.p_extra;
 				int	start_line;
@@ -2406,7 +2412,7 @@ win_line(
 				if (lcs_eol_one < 0
 					&& wp->w_p_wrap
 					&& wlv.col
-					       + wlv.n_extra - 2 > wp->w_width)
+					       + wlv.n_extra - 2 > W_WIDTH_INNER(wp))
 				    // don't bail out at end of line
 				    text_prop_follows = TRUE;
 
@@ -2472,7 +2478,7 @@ win_line(
 		}
 		else if (text_prop_next < text_prop_count
 			   && ((*ptr != NUL && ptr[mb_ptr2len(ptr)] == NUL)
-			       || (!wp->w_p_wrap && wlv.col == wp->w_width - 1)))
+			       || (!wp->w_p_wrap && wlv.col == W_WIDTH_INNER(wp) - 1)))
 		{
 		    // When at last-but-one character and a text property
 		    // follows after it, we may need to flush the line after
@@ -2483,7 +2489,7 @@ win_line(
 		    // character filling the rightmost column is detected too.
 		    int only_below_follows = !wp->w_p_wrap
 				 && wlv.col + win_chartabsize(wp, ptr, wlv.vcol)
-								>= wp->w_width;
+								>= W_WIDTH_INNER(wp);
 		    int suffix_flags = text_prop_suffix_flags[text_prop_next];
 
 		    text_prop_follows = (suffix_flags
@@ -2796,9 +2802,9 @@ win_line(
 		    // last column.
 		    if ((
 #ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col <= 0) :
+			    wp->w_p_rl ? (wlv.col <= wp->w_p_rmar) :
 #endif
-				    (wlv.col >= wp->w_width - 1))
+				    (wlv.col >= W_WIDTH_INNER(wp) - 1))
 			    && (*mb_char2cells)(mb_c) == 2)
 		    {
 			c = '>';
@@ -3023,9 +3029,9 @@ win_line(
 		// next line.
 		if ((
 #ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col <= 0) :
+			    wp->w_p_rl ? (wlv.col <= wp->w_p_rmar) :
 #endif
-				(wlv.col >= wp->w_width - 1))
+				(wlv.col >= W_WIDTH_INNER(wp) - 1))
 			&& (*mb_char2cells)(mb_c) == 2)
 		{
 		    c = '>';
@@ -3201,7 +3207,7 @@ win_line(
 			// include the complete width of the character
 			search_attr = 0;
 
-		    if (c == TAB && wlv.n_extra + wlv.col > wp->w_width)
+		    if (c == TAB && wlv.n_extra + wlv.col > W_WIDTH_INNER(wp))
 # ifdef FEAT_VARTABS
 			wlv.n_extra = tabstop_padding(wlv.vcol,
 					      wp->w_buffer->b_p_ts,
@@ -3499,9 +3505,9 @@ win_line(
 				&& VIsual_mode != Ctrl_V
 				&& (
 #ifdef FEAT_RIGHTLEFT
-				    wp->w_p_rl ? (wlv.col >= 0) :
+				    wp->w_p_rl ? (wlv.col >= wp->w_p_rmar) :
 #endif
-				    (wlv.col < wp->w_width))
+				    (wlv.col < W_WIDTH_INNER(wp)))
 				&& !(noinvcur
 				    && lnum == wp->w_cursor.lnum
 				    && (colnr_T)wlv.vcol == wp->w_virtcol)))
@@ -3614,9 +3620,9 @@ win_line(
 			 && wlv.vcol < wlv.tocol
 			 && (
 #ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col >= 0) :
+			    wp->w_p_rl ? (wlv.col >= wp->w_p_rmar) :
 #endif
-			    (wlv.col < wp->w_width)))
+			    (wlv.col < W_WIDTH_INNER(wp))))
 		{
 		    c = ' ';
 		    --ptr;	    // put it back at the NUL
@@ -3632,13 +3638,13 @@ win_line(
 			    wlv.line_attr != 0
 			) && (
 # ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col >= 0) :
+			    wp->w_p_rl ? (wlv.col >= wp->w_p_rmar) :
 # endif
 			    (wlv.col
 # ifdef FEAT_CONCEAL
 				- wlv.boguscols
 # endif
-					    < wp->w_width)))
+					    < W_WIDTH_INNER(wp))))
 		{
 		    // Highlight until the right side of the window
 		    c = ' ';
@@ -3964,13 +3970,13 @@ win_line(
 #ifdef FEAT_RIGHTLEFT
 		if (wp->w_p_rl)
 		{
-		    if (wlv.col < 0)
+		    if (wlv.col < wp->w_p_rmar)
 			n = 1;
 		}
 		else
 #endif
 		{
-		    if (wlv.col >= wp->w_width)
+		    if (wlv.col >= W_WIDTH_INNER(wp))
 			n = -1;
 		}
 		if (n != 0)
@@ -4054,9 +4060,9 @@ win_line(
 #endif
 		&& (
 #ifdef FEAT_RIGHTLEFT
-		    wp->w_p_rl ? wlv.col == 0 :
+		    wp->w_p_rl ? wlv.col == wp->w_p_rmar :
 #endif
-		    wlv.col == wp->w_width - 1)
+		    wlv.col == W_WIDTH_INNER(wp) - 1)
 		&& (*ptr != NUL
 		    || lcs_eol_one > 0
 		    || (wlv.n_extra > 0 && (wlv.c_extra != NUL
@@ -4380,9 +4386,9 @@ win_line(
 	// so far.  If there is no more to display it is caught above.
 	if ((
 #ifdef FEAT_RIGHTLEFT
-	    wp->w_p_rl ? (wlv.col < 0) :
+	    wp->w_p_rl ? (wlv.col < wp->w_p_rmar) :
 #endif
-				    (wlv.col >= wp->w_width))
+				    (wlv.col >= W_WIDTH_INNER(wp)))
 		&& (wlv.draw_state != WL_LINE
 		    || *ptr != NUL
 #ifdef FEAT_DIFF
@@ -4416,9 +4422,9 @@ win_line(
 # endif
 		while ((
 # ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? wlv.col >= 0 :
+			    wp->w_p_rl ? wlv.col >= wp->w_p_rmar :
 # endif
-			    wlv.col < wp->w_width))
+			    wlv.col < W_WIDTH_INNER(wp)))
 		{
 		    ScreenLines[wlv.off] = ' ';
 		    if (enc_utf8)
@@ -4499,7 +4505,7 @@ win_line(
 #ifdef FEAT_PROP_POPUP
 		     && !text_prop_above && !text_prop_follows
 #endif
-		     && wp->w_width == Columns)
+		     && W_WIDTH_INNER(wp) == Columns)
 	    {
 		// Remember that the line wraps, used for modeless copy.
 		LineWraps[wlv.screen_row - 1] = TRUE;
@@ -4532,7 +4538,7 @@ win_line(
 		    // then output the same character again to let the
 		    // terminal know about the wrap.  If the terminal doesn't
 		    // auto-wrap, we overwrite the character.
-		    if (screen_cur_col != wp->w_width)
+		    if (screen_cur_col != W_WIDTH_INNER(wp))
 			screen_char(LineOffset[wlv.screen_row - 1]
 						       + (unsigned)topframe->fr_width - 1,
 				       wlv.screen_row - 1, (int)(topframe->fr_width - 1));

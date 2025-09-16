@@ -1025,7 +1025,7 @@ text_to_screenline(win_T *wp, char_u *text, int col)
 	{
 	    cells = (*mb_ptr2cells)(p);
 	    c_len = (*mb_ptr2len)(p);
-	    if (col + cells > wp->w_width)
+	    if (col + cells > W_WIDTH_INNER(wp))
 		break;
 # ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
@@ -1464,14 +1464,14 @@ fold_line(
 	    if (VIsual_mode == Ctrl_V)
 	    {
 		// Visual block mode: highlight the chars part of the block
-		if (wp->w_old_cursor_fcol + txtcol < (colnr_T)wp->w_width)
+		if (wp->w_old_cursor_fcol + txtcol < (colnr_T)W_WIDTH_INNER(wp))
 		{
 		    if (wp->w_old_cursor_lcol != MAXCOL
 			     && wp->w_old_cursor_lcol + txtcol
-						       < (colnr_T)wp->w_width)
+						       < (colnr_T)W_WIDTH_INNER(wp))
 			len = wp->w_old_cursor_lcol;
 		    else
-			len = wp->w_width - txtcol;
+			len = W_WIDTH_INNER(wp) - txtcol;
 		    RL_MEMSET(wp->w_old_cursor_fcol + txtcol, HL_ATTR(HLF_V),
 					    len - (int)wp->w_old_cursor_fcol);
 		}
@@ -1479,7 +1479,7 @@ fold_line(
 	    else
 	    {
 		// Set all attributes of the text
-		RL_MEMSET(txtcol, HL_ATTR(HLF_V), wp->w_width - txtcol);
+		RL_MEMSET(txtcol, HL_ATTR(HLF_V), W_WIDTH_INNER(wp) - txtcol);
 	    }
 	}
     }
@@ -1499,7 +1499,7 @@ fold_line(
 		txtcol -= wp->w_skipcol;
 	    else
 		txtcol -= wp->w_leftcol;
-	    if (txtcol >= 0 && txtcol < wp->w_width)
+	    if (txtcol >= 0 && txtcol < W_WIDTH_INNER(wp))
 		ScreenAttrs[off + txtcol] = hl_combine_attr(
 				    ScreenAttrs[off + txtcol], HL_ATTR(HLF_MC));
 	    txtcol = old_txtcol;
@@ -1515,14 +1515,21 @@ fold_line(
 	    txtcol -= wp->w_skipcol;
 	else
 	    txtcol -= wp->w_leftcol;
-	if (txtcol >= 0 && txtcol < wp->w_width)
+	if (txtcol >= 0 && txtcol < W_WIDTH_INNER(wp))
 	    ScreenAttrs[off + txtcol] = hl_combine_attr(
 				 ScreenAttrs[off + txtcol], HL_ATTR(HLF_CUC));
     }
 # endif
 
-    screen_line(wp, row + W_WINROW(wp), wp->w_wincol, wp->w_width, wp->w_width,
-	    -1, 0);
+    screen_line(wp, row + W_WINROW(wp), wp->w_wincol,
+# ifdef FEAT_RIGHTLEFT
+	    wp->w_p_rl ? wp->w_p_rmar - 1 :
+# endif
+	    W_WIDTH_INNER(wp), wp->w_width, -1,
+# ifdef FEAT_RIGHTLEFT
+	    wp->w_p_rl ? SLF_RIGHTLEFT :
+# endif
+	    0);
 
     // Update w_cline_height and w_cline_folded if the cursor line was
     // updated (saves a call to plines() later).
@@ -1704,10 +1711,10 @@ win_update(win_T *wp)
 
     // Make sure skipcol is valid, it depends on various options and the window
     // width.
-    if (wp->w_skipcol > 0 && wp->w_width > win_col_off(wp))
+    if (wp->w_skipcol > 0 && W_WIDTH_INNER(wp) > win_col_off(wp))
     {
 	int w = 0;
-	int width1 = wp->w_width - win_col_off(wp);
+	int width1 = W_WIDTH_INNER(wp) - win_col_off(wp);
 	int width2 = width1 + win_col_off2(wp);
 	int add = width1;
 
