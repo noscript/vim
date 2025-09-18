@@ -156,7 +156,7 @@ screen_fill_end(
     if (wp->w_p_rl)
     {
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
-		W_ENDCOL(wp) - nn, (int)W_ENDCOL(wp) - off,
+		W_ENDCOL(wp) - nn + wp->w_p_rmar, (int)W_ENDCOL(wp) - off + wp->w_p_rmar,
 		c1, c2, attr);
     }
     else
@@ -3238,7 +3238,7 @@ setcursor_mayforce(int force)
 #ifdef FEAT_RIGHTLEFT
 		// With 'rightleft' set and the cursor on a double-wide
 		// character, position it on the leftmost column.
-		curwin->w_p_rl ? ((int)(curwin->w_width - curwin->w_p_rmar) - curwin->w_wcol
+		curwin->w_p_rl ? ((int)curwin->w_width - curwin->w_wcol
 		    - ((has_mbyte
 			   && (*mb_ptr2cells)(ml_get_cursor()) == 2
 			   && vim_isprintc(gchar_cursor())) ? 2 : 1)) :
