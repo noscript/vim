@@ -885,7 +885,7 @@ text_to_screenline(win_T *wp, char_u *text, int col)
 	    c_len = (*mb_ptr2len)(p);
 	    if (col + cells > wp->w_width
 # ifdef FEAT_RIGHTLEFT
-		    - (wp->w_p_rl ? col : 0)
+		    - (wp->w_p_rl ? col : wp->w_p_rmar)
 # endif
 		    )
 		break;
@@ -1149,7 +1149,7 @@ fold_line(
 		ch = *p++;
 #ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
-		idx = off + wp->w_width - wp->w_p_rmar - i - 1 - col;
+		idx = off + wp->w_width - i - 1 - col;
 	    else
 #endif
 		idx = off + col + i;
@@ -1191,7 +1191,7 @@ fold_line(
 # ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
 		// the line number isn't reversed
-		copy_text_attr(off + wp->w_width - wp->w_p_rmar - len - col,
+		copy_text_attr(off + wp->w_width - len - col,
 					(char_u *)"  ", len, HL_ATTR(HLF_FL));
 	    else
 # endif
@@ -1234,7 +1234,7 @@ fold_line(
 #ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
 		// the line number isn't reversed
-		copy_text_attr(off + wp->w_width - wp->w_p_rmar - len - col, buf, len,
+		copy_text_attr(off + wp->w_width - len - col, buf, len,
 							     HL_ATTR(HLF_FL));
 	    else
 #endif
