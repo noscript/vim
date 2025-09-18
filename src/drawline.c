@@ -565,7 +565,7 @@ handle_showbreak_and_filler(win_T *wp, winlinevars_T *wlv)
 	}
 #  ifdef FEAT_RIGHTLEFT
 	if (wp->w_p_rl)
-	    wlv->n_extra = wlv->col + 1;
+	    wlv->n_extra = wlv->col + wp->w_p_rmar + 1;
 	else
 #  endif
 	    wlv->n_extra = wp->w_width - wp->w_p_rmar - wlv->col;
@@ -916,7 +916,7 @@ draw_screen_line(win_T *wp, winlinevars_T *wlv)
 
     wcol =
 # ifdef FEAT_RIGHTLEFT
-	wp->w_p_rl ? wp->w_width - wp->w_p_rmar - wlv->col - 1 :
+	wp->w_p_rl ? wp->w_width - wlv->col - 1 :
 # endif
 	wlv->col;
     // check if line ends before left margin
@@ -959,7 +959,7 @@ draw_screen_line(win_T *wp, winlinevars_T *wlv)
 
 	while (
 # ifdef FEAT_RIGHTLEFT
-		wp->w_p_rl ? (wlv->col >= 0) :
+		wp->w_p_rl ? (wlv->col >= wp->w_p_rmar) :
 # endif
 		(wlv->col < wp->w_width - wp->w_p_rmar))
 	{
@@ -1036,7 +1036,7 @@ win_line_start(win_T *wp UNUSED, winlinevars_T *wlv, int save_extra)
 	// Rightleft window: process the text in the normal direction, but put
 	// it in current_ScreenLine[] from right to left.  Start at the
 	// rightmost column of the window.
-	wlv->col = wp->w_width - wp->w_p_rmar - 1;
+	wlv->col = wp->w_width - 1;
 	wlv->off += wlv->col;
 	wlv->screen_line_flags |= SLF_RIGHTLEFT;
     }
@@ -2297,7 +2297,7 @@ win_line(
 						    wlv.vcol,
 # ifdef FEAT_RIGHTLEFT
 						    wp->w_p_rl
-						    ? wp->w_width - wp->w_p_rmar - wlv.col - 1
+						    ? wp->w_width - wlv.col - 1
 						    :
 # endif
 						    wlv.col,
@@ -2712,7 +2712,7 @@ win_line(
 		    // last column.
 		    if ((
 # ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col <= 0) :
+			    wp->w_p_rl ? (wlv.col <= wp->w_p_rmar) :
 # endif
 				    (wlv.col >= wp->w_width - wp->w_p_rmar - 1))
 			    && (*mb_char2cells)(mb_c) == 2)
@@ -2937,7 +2937,7 @@ win_line(
 		// next line.
 		if ((
 # ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col <= 0) :
+			    wp->w_p_rl ? (wlv.col <= wp->w_p_rmar) :
 # endif
 				(wlv.col >= wp->w_width - wp->w_p_rmar - 1))
 			&& (*mb_char2cells)(mb_c) == 2)
@@ -3401,7 +3401,7 @@ win_line(
 				&& VIsual_mode != Ctrl_V
 				&& (
 # ifdef FEAT_RIGHTLEFT
-				    wp->w_p_rl ? (wlv.col >= 0) :
+				    wp->w_p_rl ? (wlv.col >= wp->w_p_rmar) :
 # endif
 				    (wlv.col < wp->w_width - wp->w_p_rmar))
 				&& !(noinvcur
@@ -3516,7 +3516,7 @@ win_line(
 			 && wlv.vcol < wlv.tocol
 			 && (
 #ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col >= 0) :
+			    wp->w_p_rl ? (wlv.col >= wp->w_p_rmar) :
 #endif
 			    (wlv.col < wp->w_width - wp->w_p_rmar)))
 		{
@@ -3534,7 +3534,7 @@ win_line(
 			    wlv.line_attr != 0
 			) && (
 # ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col >= 0) :
+			    wp->w_p_rl ? (wlv.col >= wp->w_p_rmar) :
 # endif
 			    (wlv.col
 # ifdef FEAT_CONCEAL
@@ -3697,7 +3697,7 @@ win_line(
 	{
 # ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
-		wp->w_wcol = wp->w_width - wp->w_p_rmar - wlv.col + wlv.boguscols - 1;
+		wp->w_wcol = wp->w_width - wlv.col + wlv.boguscols - 1;
 	    else
 # endif
 		wp->w_wcol = wlv.col - wlv.boguscols;
@@ -3866,7 +3866,7 @@ win_line(
 #ifdef FEAT_RIGHTLEFT
 		if (wp->w_p_rl)
 		{
-		    if (wlv.col < 0)
+		    if (wlv.col < wp->w_p_rmar)
 			n = 1;
 		}
 		else
@@ -3958,7 +3958,7 @@ win_line(
 #endif
 		&& (
 #ifdef FEAT_RIGHTLEFT
-		    wp->w_p_rl ? wlv.col == 0 :
+		    wp->w_p_rl ? wlv.col == wp->w_p_rmar :
 #endif
 		    wlv.col == wp->w_width - wp->w_p_rmar - 1)
 		&& (*ptr != NUL
@@ -4258,7 +4258,7 @@ win_line(
 	// so far.  If there is no more to display it is caught above.
 	if ((
 #ifdef FEAT_RIGHTLEFT
-	    wp->w_p_rl ? (wlv.col < 0) :
+	    wp->w_p_rl ? (wlv.col < wp->w_p_rmar) :
 #endif
 				    (wlv.col >= wp->w_width - wp->w_p_rmar))
 		&& (wlv.draw_state != WL_LINE
@@ -4294,7 +4294,7 @@ win_line(
 # endif
 		while ((
 # ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? wlv.col >= 0 :
+			    wp->w_p_rl ? wlv.col >= wp->w_p_rmar :
 # endif
 			    wlv.col < wp->w_width - wp->w_p_rmar))
 		{
