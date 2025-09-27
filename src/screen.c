@@ -482,6 +482,7 @@ screen_line(
     int		    clear_next = FALSE;
     int		    char_cells;		// 1: normal char
 					// 2: occupies two display cells
+    int		    wcr_attr = get_wcr_attr(wp);
 
     // Check for illegal row and col, just in case.
     if (row >= Rows)
@@ -507,7 +508,7 @@ screen_line(
 	    int clear_start = col;
 
 	    while (col <= endcol && ScreenLines[off_to] == ' '
-		    && ScreenAttrs[off_to] == 0
+		    && ScreenAttrs[off_to] == wcr_attr
 				  && (!enc_utf8 || ScreenLinesUC[off_to] == 0))
 	    {
 		++off_to;
@@ -515,7 +516,7 @@ screen_line(
 	    }
 	    if (col <= endcol)
 		screen_fill(row, row + 1, col + coloff,
-					    endcol + coloff + 1, ' ', ' ', 0);
+					    endcol + coloff + 1, ' ', ' ', wcr_attr);
 
 	    for (int i = endcol; i >= clear_start; i--)
 		ScreenCols[off_to + (i - col)] =
@@ -778,7 +779,7 @@ screen_line(
 
 	// blank out the rest of the line
 	while (col < clear_width && ScreenLines[off_to] == ' '
-						  && ScreenAttrs[off_to] == 0
+						  && ScreenAttrs[off_to] == wcr_attr
 				  && (!enc_utf8 || ScreenLinesUC[off_to] == 0))
 	{
 	    ScreenCols[off_to] =
@@ -834,7 +835,7 @@ screen_line(
 	    }
 #endif
 	    screen_fill(row, row + 1, col + coloff, clear_width + coloff,
-								 ' ', ' ', 0);
+								 ' ', ' ', wcr_attr);
 	    while (col < clear_width)
 	    {
 		ScreenCols[off_to++]
