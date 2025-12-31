@@ -1186,16 +1186,76 @@ fold_line(
 	len = wp->w_width - col;
 	if (len > 0)
 	{
+	    sign_attrs_T sattr;
+	    char_u	 *p;
+	    int		 attr;
+	    int		 i;
+	    int		 idx;
+
 	    if (len > 2)
 		len = 2;
-# ifdef FEAT_RIGHTLEFT
-	    if (wp->w_p_rl)
-		// the line number isn't reversed
-		copy_text_attr(off + wp->w_width - len - col,
-					(char_u *)"  ", len, HL_ATTR(HLF_FL));
+
+	    if (buf_get_signattrs(wp, lnum, &sattr) && sattr.sat_text != NULL)
+	    {
+		p = sattr.sat_text;
+		// Use the sign highlighting if defined, otherwise use Folded.
+		// Using the sign highlight makes it consistent with the sign
+		// column.
+		if (sattr.sat_texthl > 0)
+		    attr = sattr.sat_texthl;
+		else
+		    attr = HL_ATTR(HLF_SC);
+	    }
 	    else
+	    {
+		p = (char_u *)"  ";
+		attr = HL_ATTR(HLF_FL);
+	    }
+
+	    for (i = 0; i < len; ++i)
+	    {
+		int ch;
+
+		if (has_mbyte)
+		{
+		    if (*p != NUL)
+			ch = mb_ptr2char_adv(&p);
+		    else
+			ch = ' ';
+		}
+		else
+		{
+		    if (*p != NUL)
+			ch = *p++;
+		    else
+			ch = ' ';
+		}
+
+# ifdef FEAT_RIGHTLEFT
+		if (wp->w_p_rl)
+		    idx = off + wp->w_width - i - 1 - col;
+		else
 # endif
-		copy_text_attr(off + col, (char_u *)"  ", len, HL_ATTR(HLF_FL));
+		    idx = off + col + i;
+
+		if (enc_utf8)
+		{
+		    if (ch >= 0x80)
+		    {
+			ScreenLinesUC[idx] = ch;
+			ScreenLinesC[0][idx] = 0;
+			ScreenLines[idx] = 0x80;
+		    }
+		    else
+		    {
+			ScreenLines[idx] = ch;
+			ScreenLinesUC[idx] = 0;
+		    }
+		}
+		else
+		    ScreenLines[idx] = ch;
+		ScreenAttrs[idx] = attr;
+	    }
 	    col += len;
 	}
     }
