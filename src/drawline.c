@@ -299,16 +299,16 @@ get_sign_display_info(
 	wlv->n_extra = 2;
     }
 
-    if (wlv->row == wlv->startrow
+    if (wlv->row == wlv->startrow + wlv->filler_lines
 #ifdef FEAT_DIFF
-	    + wlv->filler_lines && wlv->filler_todo <= 0
+	    || wlv->row > wlv->startrow + wlv->filler_lines
 #endif
        )
     {
 	text_sign = (wlv->sattr.sat_text != NULL) ? wlv->sattr.sat_typenr : 0;
 # ifdef FEAT_SIGN_ICONS
 	icon_sign = (wlv->sattr.sat_icon != NULL) ? wlv->sattr.sat_typenr : 0;
-	if (gui.in_use && icon_sign != 0)
+	if (gui.in_use && icon_sign != 0 && wlv->row == wlv->startrow + wlv->filler_lines)
 	{
 	    // Use the image in this position.
 	    if (nrcol)
