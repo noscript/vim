@@ -297,9 +297,9 @@ typedef struct
 #endif
 #if defined(FEAT_SYN_HL) || defined(FEAT_FOLDING) || defined(FEAT_DIFF)
     int		wo_cuc;
-# define w_p_cuc w_onebuf_opt.wo_cuc	// 'cursorcolumn'
+# define w_p_cuc w_allbuf_opt.wo_cuc	// 'cursorcolumn'
     int		wo_cul;
-# define w_p_cul w_onebuf_opt.wo_cul	// 'cursorline'
+# define w_p_cul w_allbuf_opt.wo_cul	// 'cursorline'
     char_u	*wo_culopt;
 # define w_p_culopt w_onebuf_opt.wo_culopt	// 'cursorlineopt'
     char_u	*wo_cc;
