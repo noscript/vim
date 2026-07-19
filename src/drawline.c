@@ -720,7 +720,11 @@ text_prop_position(
 	    // Below-align: empty line add one character
 	    if (below && vcol == 0 && col_with_padding == col_off
 					    && W_WIDTH_INNER(wp) - col_off == before)
+	    {
 		col_with_padding += 1;
+		if (padding + cells >= before - win_col_off2(wp))
+		    before = 0;
+	    }
 
 	    if (before < 0
 		    || !(right || below)
@@ -770,11 +774,6 @@ text_prop_position(
 	    }
 	    else
 	    {
-		if (below && vcol == 0 && before > 0
-		    && (n_used < *n_extra ||
-			padding + cells >= W_WIDTH_INNER(wp) - win_col_off(wp))
-		    && before + padding + cells > W_WIDTH_INNER(wp) - win_col_off(wp))
-		    before = 0;
 		off = before + after + padding + n_used;
 		cells += before + after + padding;
 	    }
