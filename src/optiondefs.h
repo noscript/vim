@@ -2226,7 +2226,7 @@ static struct vimoption options[] =
 #endif
 			    SCTX_INIT},
     {"rightmargin", "rmar", P_NUM|P_VI_DEF|P_RWIN,
-			    (char_u *)VAR_WIN, PV_RMAR, NULL, NULL,
+			    (char_u *)VAR_WIN, PV_RMAR, did_set_rightmargin, NULL,
 			    {(char_u *)0L, (char_u *)0L} SCTX_INIT},
     {"rubydll",     NULL,   P_STRING|P_EXPAND|P_VI_DEF|P_SECURE,
 #if defined(DYNAMIC_RUBY)

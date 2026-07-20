@@ -4509,6 +4509,28 @@ did_set_readonly(optset_T *args)
 }
 
 /*
+ * Process the new 'rightmargin' option value.
+ */
+    char *
+did_set_rightmargin(optset_T *args UNUSED)
+{
+    char *errmsg = NULL;
+
+    if (curwin->w_p_rmar < 0)
+    {
+	errmsg = e_argument_must_be_positive;
+	curwin->w_p_rmar = 0;
+    }
+    if (curwin->w_allbuf_opt.wo_rmar < 0)
+    {
+	errmsg = e_argument_must_be_positive;
+	curwin->w_allbuf_opt.wo_rmar = 0;
+    }
+
+    return errmsg;
+}
+
+/*
  * Process the updated 'scrollbind' option value.
  */
     char *

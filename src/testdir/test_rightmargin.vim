@@ -1836,4 +1836,16 @@ function Test_rightmargin_split()
   setlocal rightmargin&
 endfunction
 
+function Test_rightmargin_negative()
+  set rightmargin=5
+
+  call assert_fails('set rightmargin=-1', 'E487:')
+  call assert_equal(0, &rightmargin)
+
+  call assert_fails('setglobal rightmargin=-1', 'E487:')
+  call assert_equal(0, &g:rightmargin)
+
+  set rightmargin&
+endfunction
+
 " vim: shiftwidth=2 sts=2 expandtab
