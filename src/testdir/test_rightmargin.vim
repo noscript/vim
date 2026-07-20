@@ -1825,4 +1825,15 @@ function Test_rightmargin_foldtext_double_cell()
   set ff& rightmargin& nowrap& fillchars&
 endfunction
 
+function Test_rightmargin_split()
+  setlocal rightmargin=7
+
+  split
+  call assert_equal(7, &rightmargin)
+  close
+  call assert_equal(7, &rightmargin)
+
+  setlocal rightmargin&
+endfunction
+
 " vim: shiftwidth=2 sts=2 expandtab

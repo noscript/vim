@@ -7468,6 +7468,7 @@ copy_winopt(winopt_T *from, winopt_T *to)
     to->wo_rl  = from->wo_rl;
     to->wo_rlc = copy_option_val(from->wo_rlc);
 #endif
+    to->wo_rmar = from->wo_rmar;
 #ifdef FEAT_LINEBREAK
     to->wo_sbr = copy_option_val(from->wo_sbr);
 #endif
