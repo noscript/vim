@@ -1848,4 +1848,41 @@ function Test_rightmargin_negative()
   set rightmargin&
 endfunction
 
+" test that 'colorcolumn' and 'cursorcolumn' rendered properly:
+function Test_rightmargin_colorcolumn_cursorcolumn()
+  CheckFeature syntax
+  CheckScreendump
+  CheckRunVimInTerminal
+
+  let script_lines =<< trim eval END
+    colorscheme koehler
+    set rightmargin=0 colorcolumn=20 cursorcolumn nowrap
+    highlight ColorColumn  ctermbg=Red
+    highlight CursorColumn ctermbg=Green
+    highlight Cursor       ctermbg=Blue
+
+    call setline(1, {s:lines})
+    norm! 3G10|
+
+    set noshowmode noshowcmd
+  END
+
+  call writefile(script_lines, 'XTest_rightmargin_colorcolumn_cursorcolumn', 'D')
+  let buf = RunVimInTerminal('-S XTest_rightmargin_colorcolumn_cursorcolumn', {'rows': 6, 'cols': 30})
+
+  " both colorcolumn and cursorcolumn visible:
+  call VerifyScreenDump(buf, 'Test_rightmargin_colorcolumn_cursorcolumn_1', {})
+
+  " increase rightmargin to make colorcolumn off screen:
+  call term_sendkeys(buf, ":set rightmargin=15\<CR>")
+  call VerifyScreenDump(buf, 'Test_rightmargin_colorcolumn_cursorcolumn_2', {})
+
+  " increase further to leave no room for text:
+  call term_sendkeys(buf, ":set rightmargin=9999\<CR>")
+  call VerifyScreenDump(buf, 'Test_rightmargin_colorcolumn_cursorcolumn_3', {})
+
+  " clean up
+  call StopVimInTerminal(buf)
+endfunction
+
 " vim: shiftwidth=2 sts=2 expandtab
