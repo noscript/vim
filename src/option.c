@@ -5163,7 +5163,7 @@ did_set_winwidth(optset_T *args UNUSED)
     }
 
     // Change window width NOW
-    if (!ONE_WINDOW && curwin->w_width < p_wiw)
+    if (!ONE_WINDOW && win_content_width(curwin) < p_wiw)
 	win_setwidth((int)p_wiw);
 
     return errmsg;

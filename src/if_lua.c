@@ -1649,7 +1649,7 @@ luaV_window_index(lua_State *L)
     else if (strncmp(s, "col", 3) == 0)
 	lua_pushinteger(L, w->w_cursor.col + 1);
     else if (strncmp(s, "width", 5) == 0)
-	lua_pushinteger(L, w->w_width);
+	lua_pushinteger(L, win_content_width(w));
     else if (strncmp(s, "height", 6) == 0)
 	lua_pushinteger(L, w->w_height);
     // methods

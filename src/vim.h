@@ -948,7 +948,7 @@ extern int (*dyn_libintl_wputenv)(const wchar_t *envstring);
 # define TPL_LCOL()			0
 #endif
 
-#define W_ENDCOL(wp)	((wp)->w_wincol + (wp)->w_width)
+#define W_ENDCOL(wp)	((wp)->w_wincol + win_content_width(wp))
 #ifdef FEAT_MENU
 # define W_WINROW(wp)	((wp)->w_winrow + (wp)->w_winbar_height)
 #else
@@ -2583,6 +2583,36 @@ typedef int (*opt_expand_cb_T)(optexpand_T *args, int *numMatches, char_u ***mat
 #endif
 
 #include "globals.h"	    // global variables and messages
+
+int win_col_off(win_T *wp);
+int curwin_col_off(void);
+int win_col_off2(win_T *wp);
+int curwin_col_off(void);
+
+static inline int win_content_width(win_T *wp)
+{
+    return wp->w_width;
+}
+
+static inline int curwin_content_width(void)
+{
+    return curwin->w_width;
+}
+
+static inline int win_text_width(win_T *wp)
+{
+    return win_content_width(wp) - win_col_off(wp);
+}
+
+static inline int curwin_text_width(void)
+{
+    return curwin_content_width() - curwin_col_off();
+}
+
+static inline int win_text_width2(win_T *wp)
+{
+    return win_text_width(wp) + win_col_off2(wp);
+}
 #include "errors.h"	    // error messages
 
 /*

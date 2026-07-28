@@ -7516,7 +7516,7 @@ ex_resize(exarg_T *eap)
     if (cmdmod.cmod_split & WSP_VERT)
     {
 	if (*eap->arg == '-' || *eap->arg == '+')
-	    n += wp->w_width;
+	    n += win_content_width(wp);
 	else if (n == 0 && eap->arg[0] == NUL)	// default is very wide
 	    n = 9999;
 	win_setwidth_win(n, wp);

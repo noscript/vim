@@ -4450,7 +4450,7 @@ gui_update_scrollbars(
 	if (force || sb->height != wp->w_height
 	    || sb->top != wp->w_winrow
 	    || sb->status_height != wp->w_status_height
-	    || sb->width != wp->w_width
+	    || sb->width != win_content_width(wp)
 	    || prev_curwin != curwin)
 	{
 	    // Height, width or position of scrollbar has changed.  For
@@ -4458,7 +4458,7 @@ gui_update_scrollbars(
 	    sb->height = wp->w_height;
 	    sb->top = wp->w_winrow;
 	    sb->status_height = wp->w_status_height;
-	    sb->width = wp->w_width;
+	    sb->width = win_content_width(wp);
 
 	    // Calculate height and position in pixels
 	    h = (sb->height + sb->status_height) * gui.char_height;
@@ -4536,9 +4536,9 @@ gui_do_scrollbar(
     int		which,	    // SBAR_LEFT or SBAR_RIGHT
     int		enable)	    // TRUE to enable scrollbar
 {
-    int		midcol = curwin->w_wincol + curwin->w_width / 2;
+    int		midcol = curwin->w_wincol + win_content_width(curwin) / 2;
     int		has_midcol = (wp->w_wincol <= midcol
-				     && wp->w_wincol + wp->w_width >= midcol);
+				     && wp->w_wincol + win_content_width(wp) >= midcol);
 
     // Only enable scrollbars that contain the middle column of the current
     // window.
@@ -4561,7 +4561,7 @@ gui_do_scrollbar(
 	}
 	else
 	{
-	    if (which == SBAR_RIGHT ? wp->w_wincol + wp->w_width != Columns
+	    if (which == SBAR_RIGHT ? wp->w_wincol + win_content_width(wp) != Columns
 								: !has_midcol)
 		enable = FALSE;
 	}
@@ -4708,14 +4708,14 @@ gui_update_horiz_scrollbar(int force)
 	return;
     }
 
-    size = curwin->w_width;
+    size = win_content_width(curwin);
     if (curwin->w_p_wrap)
     {
 	value = 0;
 #ifdef SCROLL_PAST_END
 	max = 0;
 #else
-	max = curwin->w_width - 1;
+	max = win_content_width(curwin) - 1;
 #endif
     }
     else
@@ -4731,7 +4731,7 @@ gui_update_horiz_scrollbar(int force)
 	}
 
 #ifndef SCROLL_PAST_END
-	max += curwin->w_width - 1;
+	max += win_content_width(curwin) - 1;
 #endif
 	// The line number isn't scrolled, thus there is less space when
 	// 'number' or 'relativenumber' is set (also for 'foldcolumn').
@@ -5083,7 +5083,7 @@ xy2win(int x, int y, mouse_find_T popup)
     }
     else if (row >= wp->w_height + wp->w_status_height)	// below status line
 	update_mouseshape(SHAPE_IDX_CLINE);
-    else if (!(State & MODE_CMDLINE) && wp->w_vsep_width > 0 && col == wp->w_width
+    else if (!(State & MODE_CMDLINE) && wp->w_vsep_width > 0 && col == win_content_width(wp)
 	    && (!(row >= wp->w_height && row < wp->w_height
 	    + wp->w_status_height) || !stl_connected(wp)) && msg_scrolled == 0)
 	update_mouseshape(SHAPE_IDX_VSEP);

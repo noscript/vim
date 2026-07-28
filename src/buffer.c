@@ -5946,7 +5946,7 @@ ex_buffer_all(exarg_T *eap)
 			|| ((cmdmod.cmod_split & WSP_VERT)
 			    ? wp->w_height + wp->w_status_height < Rows - p_ch
 							     - tabline_height()
-			    : wp->w_width != Columns)
+			    : win_content_width(wp) != Columns)
 			|| (had_tab > 0 && wp != firstwin))
 		    && !ONE_WINDOW
 		    && !(win_locked(wp) || wp->w_buffer->b_locked > 0)

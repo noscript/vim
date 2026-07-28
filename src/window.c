@@ -166,7 +166,7 @@ log_frame_layout(frame_T *frame)
 				  : frame->fr_layout == FR_ROW ? "ROW" : "COL",
 	    frame->fr_width,
 	    frame->fr_height,
-	    frame->fr_win == NULL ? -1 : frame->fr_win->w_width,
+	    frame->fr_win == NULL ? -1 : win_content_width(frame->fr_win),
 	    frame->fr_win == NULL ? -1 : frame->fr_win->w_height,
 	    frame->fr_win == NULL ? -1 : frame->fr_win->w_id);
     if (frame->fr_child != NULL)
@@ -602,7 +602,7 @@ newwindow:
 #ifdef FEAT_GUI
 		need_mouse_correct = TRUE;
 #endif
-		win_setwidth(curwin->w_width + (int)Prenum1);
+		win_setwidth(win_content_width(curwin) + (int)Prenum1);
 		break;
 
 // decrease current window width
@@ -610,7 +610,7 @@ newwindow:
 #ifdef FEAT_GUI
 		need_mouse_correct = TRUE;
 #endif
-		win_setwidth(curwin->w_width - (int)Prenum1);
+		win_setwidth(win_content_width(curwin) - (int)Prenum1);
 		break;
 
 // set current window width
@@ -1118,21 +1118,21 @@ win_split_ins(
 	    goto theend;
 	}
 	if (new_size == 0)
-	    new_size = oldwin->w_width / 2;
+	    new_size = win_content_width(oldwin) / 2;
 	if (new_size > available - minwidth - 1)
 	    new_size = available - minwidth - 1;
 	if (new_size < wmw1)
 	    new_size = wmw1;
 
 	// if it doesn't fit in the current window, need win_equal()
-	if (oldwin->w_width - new_size - 1 < p_wmw)
+	if (win_content_width(oldwin) - new_size - 1 < p_wmw)
 	    do_equal = TRUE;
 
 	// We don't like to take lines for the new window from a
 	// 'winfixwidth' window.  Take them from a window to the left or right
 	// instead, if possible. Add one for the separator.
 	if (oldwin->w_p_wfw)
-	    win_setwidth_win(oldwin->w_width + new_size + 1, oldwin);
+	    win_setwidth_win(win_content_width(oldwin) + new_size + 1, oldwin);
 
 	// Only make all windows the same width if one of them (except oldwin)
 	// is wider than one of the split windows.
@@ -1143,8 +1143,8 @@ win_split_ins(
 	    while (frp != NULL)
 	    {
 		if (frp->fr_win != oldwin && frp->fr_win != NULL
-			&& (frp->fr_win->w_width > new_size
-			    || frp->fr_win->w_width > oldwin->w_width
+			&& (win_content_width(frp->fr_win) > new_size
+			    || win_content_width(frp->fr_win) > win_content_width(oldwin)
 							      - new_size - 1))
 		{
 		    do_equal = TRUE;
@@ -1413,14 +1413,14 @@ win_split_ins(
 								       FALSE);
 	}
 	else
-	    win_new_width(oldwin, oldwin->w_width - (new_size + 1));
+	    win_new_width(oldwin, win_content_width(oldwin) - (new_size + 1));
 	if (before)	// new window left of current one
 	{
 	    wp->w_wincol = oldwin->w_wincol;
 	    oldwin->w_wincol += new_size + 1;
 	}
 	else		// new window right of current one
-	    wp->w_wincol = oldwin->w_wincol + oldwin->w_width + 1;
+	    wp->w_wincol = oldwin->w_wincol + win_content_width(oldwin) + 1;
 	frame_fix_width(oldwin);
 	frame_fix_width(wp);
     }
@@ -1436,7 +1436,7 @@ win_split_ins(
 	else
 	{
 	    wp->w_wincol = oldwin->w_wincol;
-	    win_new_width(wp, oldwin->w_width);
+	    win_new_width(wp, win_content_width(oldwin));
 	    wp->w_vsep_width = oldwin->w_vsep_width;
 	}
 	frp->fr_width = curfrp->fr_width;
@@ -1781,7 +1781,7 @@ make_windows(
     {
 	// Each window needs at least 'winminwidth' lines and a separator
 	// column.
-	maxcount = (curwin->w_width + curwin->w_vsep_width
+	maxcount = (win_content_width(curwin) + curwin->w_vsep_width
 					     - (p_wiw - p_wmw)) / (p_wmw + 1);
     }
     else
@@ -1812,7 +1812,7 @@ make_windows(
     for (todo = count - 1; todo > 0; --todo)
 	if (vertical)
 	{
-	    if (win_split(curwin->w_width - (curwin->w_width - todo)
+	    if (win_split(win_content_width(curwin) - (win_content_width(curwin) - todo)
 			/ (todo + 1) - 1, WSP_VERT | WSP_ABOVE) == FAIL)
 		break;
 	}
@@ -3113,7 +3113,7 @@ snapshot_windows_scroll_size(void)
 #endif
 	wp->w_last_leftcol = wp->w_leftcol;
 	wp->w_last_skipcol = wp->w_skipcol;
-	wp->w_last_width = wp->w_width;
+	wp->w_last_width = win_content_width(wp);
 	wp->w_last_height = wp->w_height;
     }
 }
@@ -3231,7 +3231,7 @@ check_window_scroll_resize(
     {
 	int ignore_scroll = event_ignored(EVENT_WINSCROLLED, wp->w_p_eiw);
 	int size_changed = !event_ignored(EVENT_WINRESIZED, wp->w_p_eiw)
-			    && (wp->w_last_width != wp->w_width
+			    && (wp->w_last_width != win_content_width(wp)
 			    || wp->w_last_height != wp->w_height);
 	if (size_changed)
 	{
@@ -3274,7 +3274,7 @@ check_window_scroll_resize(
 	if ((size_changed || scroll_changed) && v_event != NULL)
 	{
 	    // Add info about this window to the v:event dictionary.
-	    int width = wp->w_width - wp->w_last_width;
+	    int width = win_content_width(wp) - wp->w_last_width;
 	    int height = wp->w_height - wp->w_last_height;
 	    int topline = wp->w_topline - wp->w_last_topline;
 # ifdef FEAT_DIFF
@@ -4315,13 +4315,13 @@ frame_set_vsep(frame_T *frp, int add)
 	wp = frp->fr_win;
 	if (add && wp->w_vsep_width == 0)
 	{
-	    if (wp->w_width > 0)	// don't make it negative
-		win_new_width(wp, wp->w_width - 1);
+	    if (win_content_width(wp) > 0)	// don't make it negative
+		win_new_width(wp, win_content_width(wp) - 1);
 	    wp->w_vsep_width = 1;
 	}
 	else if (!add && wp->w_vsep_width == 1)
 	{
-	    win_new_width(wp, wp->w_width + 1);
+	    win_new_width(wp, win_content_width(wp) + 1);
 	    wp->w_vsep_width = 0;
 	}
     }
@@ -4347,7 +4347,7 @@ frame_set_vsep(frame_T *frp, int add)
     static void
 frame_fix_width(win_T *wp)
 {
-    wp->w_frame->fr_width = wp->w_width + wp->w_vsep_width;
+    wp->w_frame->fr_width = win_content_width(wp) + wp->w_vsep_width;
 }
 
 /*
@@ -5862,7 +5862,7 @@ win_enter_ext(win_T *wp, int flags)
 	win_setheight(1);
 
     // set window width to desired minimal value
-    if (curwin->w_width < p_wiw && !curwin->w_p_wfw)
+    if (win_content_width(curwin) < p_wiw && !curwin->w_p_wfw)
 	win_setwidth((int)p_wiw);
 
     setmouse();			// in case jumped to/from help buffer
@@ -6459,7 +6459,7 @@ win_size_save(garray_T *gap)
     FOR_ALL_WINDOWS(wp)
     {
 	((int *)gap->ga_data)[gap->ga_len++] =
-	    wp->w_width + wp->w_vsep_width;
+	    win_content_width(wp) + wp->w_vsep_width;
 	((int *)gap->ga_data)[gap->ga_len++] = wp->w_height;
     }
 }
@@ -6540,7 +6540,7 @@ frame_comp_pos(frame_T *topfrp, int *row, int *col)
 	// WinBar will not show if the window height is zero
 	h = VISIBLE_HEIGHT(wp) + wp->w_status_height;
 	*row += h > topfrp->fr_height ? topfrp->fr_height : h;
-	*col += wp->w_width + wp->w_vsep_width;
+	*col += win_content_width(wp) + wp->w_vsep_width;
     }
     else
     {
@@ -7468,13 +7468,13 @@ scroll_to_fraction(win_T *wp, int prev_height)
 	     */
 	    wp->w_wrow = line_size;
 	    if (wp->w_wrow >= wp->w_height
-				       && (wp->w_width - win_col_off(wp)) > 0)
+				       && (win_content_width(wp) - win_col_off(wp)) > 0)
 	    {
-		wp->w_skipcol += wp->w_width - win_col_off(wp);
+		wp->w_skipcol += win_content_width(wp) - win_col_off(wp);
 		--wp->w_wrow;
 		while (wp->w_wrow >= wp->w_height)
 		{
-		    wp->w_skipcol += wp->w_width - win_col_off(wp)
+		    wp->w_skipcol += win_content_width(wp) - win_col_off(wp)
 							   + win_col_off2(wp);
 		    --wp->w_wrow;
 		}

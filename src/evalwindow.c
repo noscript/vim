@@ -425,7 +425,7 @@ get_win_info(win_T *wp, short tpnr, short winnr)
 # ifdef FEAT_MENU
     dict_add_number(dict, "winbar", wp->w_winbar_height);
 # endif
-    dict_add_number(dict, "width", wp->w_width);
+    dict_add_number(dict, "width", win_content_width(wp));
     dict_add_number(dict, "wincol", wp->w_wincol + 1);
     dict_add_number(dict, "textoff", win_col_off(wp));
     dict_add_number(dict, "bufnr", wp->w_buffer->b_fnum);
@@ -1129,7 +1129,7 @@ f_wincol(typval_T *argvars UNUSED, typval_T *rettv)
     int col = curwin->w_wcol + 1;
 # ifdef FEAT_RIGHTLEFT
     if (curwin->w_p_rl)
-	col = curwin->w_width - curwin->w_wcol - cursor_screen_cells() + 1;
+	col = win_content_width(curwin) - curwin->w_wcol - cursor_screen_cells() + 1;
 # endif
     rettv->vval.v_number = col;
 }
@@ -1229,7 +1229,7 @@ f_winrestcmd(typval_T *argvars UNUSED, typval_T *rettv)
 		":%dresize %d|", winnr, wp->w_height);
 	    ga_concat_len(&ga, buf, buflen);
 	    buflen = vim_snprintf_safelen((char *)buf, sizeof(buf),
-		"vert :%dresize %d|", winnr, wp->w_width);
+		"vert :%dresize %d|", winnr, win_content_width(wp));
 	    ga_concat_len(&ga, buf, buflen);
 	    ++winnr;
 	}
@@ -1277,7 +1277,7 @@ f_winrestview(typval_T *argvars, typval_T *rettv UNUSED)
 
     check_cursor();
     win_new_height(curwin, curwin->w_height);
-    win_new_width(curwin, curwin->w_width);
+    win_new_width(curwin, win_content_width(curwin));
     changed_window_setting();
 
     if (curwin->w_topline <= 0)
@@ -1330,7 +1330,7 @@ f_winwidth(typval_T *argvars, typval_T *rettv)
     if (wp == NULL)
 	rettv->vval.v_number = -1;
     else
-	rettv->vval.v_number = wp->w_width;
+	rettv->vval.v_number = win_content_width(wp);
 }
 #endif // FEAT_EVAL
 

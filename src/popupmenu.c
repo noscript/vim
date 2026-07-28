@@ -329,7 +329,7 @@ pum_display(
 	pum_win_height = curwin->w_height;
 	pum_win_col = curwin->w_wincol;
 	pum_win_wcol = pum_wcol >= 0 ? pum_wcol : curwin->w_wcol;
-	pum_win_width = curwin->w_width;
+	pum_win_width = win_content_width(curwin);
 
 #if defined(FEAT_QUICKFIX)
 	FOR_ALL_WINDOWS(pvwin)
@@ -363,7 +363,7 @@ pum_display(
 	{
 	    int wcol = pum_wcol >= 0 ? pum_wcol : curwin->w_wcol;
 	    // w_wcol includes virtual text "above".
-	    wcol %= curwin->w_width;
+	    wcol %= win_content_width(curwin);
 #ifdef FEAT_CONCEAL
 	    // w_wcol does not account for text concealed before the cursor;
 	    // shift by the offset win_line() recorded for the cursor line so the
@@ -377,7 +377,7 @@ pum_display(
 #endif
 #ifdef FEAT_RIGHTLEFT
 	    if (pum_rl)
-		cursor_col = curwin->w_wincol + curwin->w_width - wcol - 1;
+		cursor_col = curwin->w_wincol + win_content_width(curwin) - wcol - 1;
 	    else
 #endif
 		cursor_col = curwin->w_wincol + wcol;
@@ -1148,7 +1148,7 @@ pum_redraw(void)
 #ifdef FEAT_RIGHTLEFT
 	if (pum_rl)
 	{
-	    if (pum_col < curwin->w_wincol + curwin->w_width - 1
+	    if (pum_col < curwin->w_wincol + win_content_width(curwin) - 1
 							    - pum_border)
 		screen_putchar(' ', row, pum_col + 1, attr);
 	}
@@ -1667,7 +1667,7 @@ pum_in_same_position(void)
 	    || (pum_win_row == row
 		&& pum_win_height == curwin->w_height
 		&& pum_win_col == curwin->w_wincol
-		&& pum_win_width == curwin->w_width);
+		&& pum_win_width == win_content_width(curwin));
 }
 
 /*

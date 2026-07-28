@@ -1847,7 +1847,7 @@ edit_putchar(int c, int highlight)
 #ifdef FEAT_RIGHTLEFT
     if (curwin->w_p_rl)
     {
-	pc_col += curwin->w_width - 1 - curwin->w_wcol;
+	pc_col += win_content_width(curwin) - 1 - curwin->w_wcol;
 	if (has_mbyte)
 	{
 	    int fix_col = mb_fix_col(pc_col, pc_row);
@@ -1935,7 +1935,7 @@ display_dollar(colnr_T col_arg)
 	curwin->w_cursor.col -= (*mb_head_off)(p, p + col);
     }
     curs_columns(FALSE);	    // recompute w_wrow and w_wcol
-    if (curwin->w_wcol < curwin->w_width)
+    if (curwin->w_wcol < win_content_width(curwin))
     {
 	edit_putchar('$', FALSE);
 	dollar_vcol = curwin->w_virtcol;

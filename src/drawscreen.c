@@ -564,8 +564,8 @@ win_redr_status(win_T *wp, int ignore_pum UNUSED)
 	if (wp->w_buffer->b_p_ro)
 	    plen += vim_snprintf((char *)p + plen, MAXPATHL - plen, "%s", _("[RO]"));
 
-	this_ru_col = ru_col - (cmdline_width - wp->w_width);
-	n = (wp->w_width + 1) / 2;
+	this_ru_col = ru_col - (cmdline_width - win_content_width(wp));
+	n = (win_content_width(wp) + 1) / 2;
 	if (this_ru_col < n)
 	    this_ru_col = n;
 	if (this_ru_col <= 1)
@@ -864,7 +864,7 @@ win_redr_ruler(win_T *wp, int always, int ignore_pum)
 	    row = statusline_row(wp);
 	    fillchar = fillchar_status(&attr, wp);
 	    off = wp->w_wincol;
-	    width = wp->w_width;
+	    width = win_content_width(wp);
 	}
 	else
 	{
@@ -1036,11 +1036,11 @@ text_to_screenline(win_T *wp, char_u *text, int col)
 	{
 	    cells = (*mb_ptr2cells)(p);
 	    c_len = (*mb_ptr2len)(p);
-	    if (col + cells > wp->w_width)
+	    if (col + cells > win_content_width(wp))
 		break;
 # ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
-		idx = off + wp->w_width - col - cells;
+		idx = off + win_content_width(wp) - col - cells;
 # endif
 	    ScreenLines[idx] = *p;
 	    if (enc_utf8)
@@ -1113,7 +1113,7 @@ text_to_screenline(win_T *wp, char_u *text, int col)
     else
     {
 	int len = (int)STRLEN(text);
-	int n = wp->w_width - col;
+	int n = win_content_width(wp) - col;
 
 	if (len > n)
 	    len = n;
@@ -1157,21 +1157,21 @@ redraw_win_toolbar(win_T *wp)
 
     // TODO: use fewer spaces if there is not enough room
     for (menu = wp->w_winbar->children;
-			  menu != NULL && col < wp->w_width; menu = menu->next)
+			  menu != NULL && col < win_content_width(wp); menu = menu->next)
     {
 	space_to_screenline(off + col, fill_attr);
-	if (++col >= wp->w_width)
+	if (++col >= win_content_width(wp))
 	    break;
 	if (col > 1)
 	{
 	    space_to_screenline(off + col, fill_attr);
-	    if (++col >= wp->w_width)
+	    if (++col >= win_content_width(wp))
 		break;
 	}
 
 	wp->w_winbar_items[item_idx].wb_startcol = col;
 	space_to_screenline(off + col, button_attr);
-	if (++col >= wp->w_width)
+	if (++col >= win_content_width(wp))
 	    break;
 
 	next_col = text_to_screenline(wp, menu->name, col);
@@ -1184,20 +1184,20 @@ redraw_win_toolbar(win_T *wp)
 	wp->w_winbar_items[item_idx].wb_menu = menu;
 	++item_idx;
 
-	if (col >= wp->w_width)
+	if (col >= win_content_width(wp))
 	    break;
 	space_to_screenline(off + col, button_attr);
 	++col;
     }
-    while (col < wp->w_width)
+    while (col < win_content_width(wp))
     {
 	space_to_screenline(off + col, fill_attr);
 	++col;
     }
     wp->w_winbar_items[item_idx].wb_menu = NULL; // end marker
 
-    screen_line(wp, wp->w_winrow, wp->w_wincol, wp->w_width,
-							  wp->w_width, -1, 0);
+    screen_line(wp, wp->w_winrow, wp->w_wincol, win_content_width(wp),
+							  win_content_width(wp), -1, 0);
 
     if (override_success)
 	pop_highlight_overrides();
@@ -1273,7 +1273,7 @@ fold_line(
     do { \
 	if (wp->w_p_rl) \
 	    for (ri = 0; ri < (l); ++ri) \
-	       ScreenAttrs[off + (wp->w_width - (p) - (l)) + ri] = v; \
+	       ScreenAttrs[off + (win_content_width(wp) - (p) - (l)) + ri] = v; \
 	 else \
 	    for (ri = 0; ri < (l); ++ri) \
 	       ScreenAttrs[off + (p) + ri] = v; \
@@ -1307,7 +1307,7 @@ fold_line(
 		ch = *p++;
 # ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
-		idx = off + wp->w_width - i - 1 - col;
+		idx = off + win_content_width(wp) - i - 1 - col;
 	    else
 # endif
 		idx = off + col + i;
@@ -1335,13 +1335,13 @@ fold_line(
 
     // Set all attributes of the 'number' or 'relativenumber' column and the
     // text
-    RL_MEMSET(col, HL_ATTR(HLF_FL), wp->w_width - col);
+    RL_MEMSET(col, HL_ATTR(HLF_FL), win_content_width(wp) - col);
 
 # ifdef FEAT_SIGNS
     // If signs are being displayed, add two spaces.
     if (signcolumn_on(wp))
     {
-	len = wp->w_width - col;
+	len = win_content_width(wp) - col;
 	if (len > 0)
 	{
 	    if (len > 2)
@@ -1349,7 +1349,7 @@ fold_line(
 #  ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
 		// the line number isn't reversed
-		copy_text_attr(off + wp->w_width - len - col,
+		copy_text_attr(off + win_content_width(wp) - len - col,
 					(char_u *)"  ", len, HL_ATTR(HLF_FL));
 	    else
 #  endif
@@ -1362,7 +1362,7 @@ fold_line(
     // 3. Add the 'number' or 'relativenumber' column
     if (wp->w_p_nu || wp->w_p_rnu)
     {
-	len = wp->w_width - col;
+	len = win_content_width(wp) - col;
 	if (len > 0)
 	{
 	    int	    w = number_width(wp);
@@ -1392,7 +1392,7 @@ fold_line(
 # ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
 		// the line number isn't reversed
-		copy_text_attr(off + wp->w_width - len - col, buf, len,
+		copy_text_attr(off + win_content_width(wp) - len - col, buf, len,
 							     HL_ATTR(HLF_FL));
 	    else
 # endif
@@ -1413,14 +1413,14 @@ fold_line(
     col = text_to_screenline(wp, text, col);
 
     // Fill the rest of the line with the fold filler
-    while (col < wp->w_width)
+    while (col < win_content_width(wp))
     {
 	int c = wp->w_fill_chars.fold;
 	int idx = off + col;
 
 # ifdef FEAT_RIGHTLEFT
 	if (wp->w_p_rl)
-	    idx = off + wp->w_width - 1 - col;
+	    idx = off + win_content_width(wp) - 1 - col;
 # endif
 
 	if (enc_utf8)
@@ -1475,14 +1475,14 @@ fold_line(
 	    if (VIsual_mode == Ctrl_V)
 	    {
 		// Visual block mode: highlight the chars part of the block
-		if (wp->w_old_cursor_fcol + txtcol < (colnr_T)wp->w_width)
+		if (wp->w_old_cursor_fcol + txtcol < (colnr_T)win_content_width(wp))
 		{
 		    if (wp->w_old_cursor_lcol != MAXCOL
 			     && wp->w_old_cursor_lcol + txtcol
-						       < (colnr_T)wp->w_width)
+						       < (colnr_T)win_content_width(wp))
 			len = wp->w_old_cursor_lcol;
 		    else
-			len = wp->w_width - txtcol;
+			len = win_content_width(wp) - txtcol;
 		    RL_MEMSET(wp->w_old_cursor_fcol + txtcol, HL_ATTR(HLF_V),
 					    len - (int)wp->w_old_cursor_fcol);
 		}
@@ -1490,7 +1490,7 @@ fold_line(
 	    else
 	    {
 		// Set all attributes of the text
-		RL_MEMSET(txtcol, HL_ATTR(HLF_V), wp->w_width - txtcol);
+		RL_MEMSET(txtcol, HL_ATTR(HLF_V), win_content_width(wp) - txtcol);
 	    }
 	}
     }
@@ -1510,7 +1510,7 @@ fold_line(
 		txtcol -= wp->w_skipcol;
 	    else
 		txtcol -= wp->w_leftcol;
-	    if (txtcol >= 0 && txtcol < wp->w_width)
+	    if (txtcol >= 0 && txtcol < win_content_width(wp))
 		ScreenAttrs[off + txtcol] = hl_combine_attr(
 				    ScreenAttrs[off + txtcol], HL_ATTR(HLF_MC));
 	    txtcol = old_txtcol;
@@ -1526,13 +1526,13 @@ fold_line(
 	    txtcol -= wp->w_skipcol;
 	else
 	    txtcol -= wp->w_leftcol;
-	if (txtcol >= 0 && txtcol < wp->w_width)
+	if (txtcol >= 0 && txtcol < win_content_width(wp))
 	    ScreenAttrs[off + txtcol] = hl_combine_attr(
 				 ScreenAttrs[off + txtcol], HL_ATTR(HLF_CUC));
     }
 # endif
 
-    screen_line(wp, row + W_WINROW(wp), wp->w_wincol, wp->w_width, wp->w_width,
+    screen_line(wp, row + W_WINROW(wp), wp->w_wincol, win_content_width(wp), win_content_width(wp),
 	    -1, 0);
 
     // Update w_cline_height and w_cline_folded if the cursor line was
@@ -1715,10 +1715,10 @@ win_update(win_T *wp)
 
     // Make sure skipcol is valid, it depends on various options and the window
     // width.
-    if (wp->w_skipcol > 0 && wp->w_width > win_col_off(wp))
+    if (wp->w_skipcol > 0 && win_content_width(wp) > win_col_off(wp))
     {
 	int w = 0;
-	int width1 = wp->w_width - win_col_off(wp);
+	int width1 = win_content_width(wp) - win_col_off(wp);
 	int width2 = width1 + win_col_off2(wp);
 	int add = width1;
 
@@ -2823,7 +2823,7 @@ win_update(win_T *wp)
 
 	    // Last line isn't finished: Display "@@@" in the last screen line.
 	    screen_puts_len(fillbuf,
-			    (wp->w_width > 2 ? 2 : wp->w_width) * charlen,
+			    (win_content_width(wp) > 2 ? 2 : win_content_width(wp)) * charlen,
 			    scr_row, wp->w_wincol, HL_ATTR(HLF_AT));
 	    screen_fill(scr_row, scr_row + 1,
 		    (int)wp->w_wincol + 2, (int)W_ENDCOL(wp),

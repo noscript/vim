@@ -1015,7 +1015,7 @@ arg_all_close_unused_windows(arg_all_state_T *aall)
 	    buf = wp->w_buffer;
 	    if (buf->b_ffname == NULL
 		    || (!aall->keep_tabs && (buf->b_nwindows > 1
-			    || wp->w_width != cmdline_width)))
+			    || win_content_width(wp) != cmdline_width)))
 		i = aall->opened_len;
 	    else
 	    {

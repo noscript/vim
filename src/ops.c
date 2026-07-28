@@ -3797,7 +3797,7 @@ get_op_vcol(
     colnr_T	    start, end;
 
     if (VIsual_mode != Ctrl_V
-	    || (!initial && oap->end.col < curwin->w_width))
+	    || (!initial && oap->end.col < win_content_width(curwin)))
 	return;
 
     oap->block_mode = TRUE;
