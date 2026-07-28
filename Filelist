@@ -1221,5 +1221,6 @@ IGNORE = \
 		ci/hlgroups.ignore \
 		src/libvterm/CODE-MAP \
 		runtime/syntax/testdir/input/html_html \
+		win_width_helpers.sh
 
 # vim: set ft=make:
