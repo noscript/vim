@@ -169,7 +169,7 @@ get_fpos_of_mouse(pos_T *mpos)
     // winpos and height may change in win_enter()!
     if (row >= wp->w_height)	// In (or below) status line
 	return IN_STATUS_LINE;
-    if (col >= wp->w_width)	// In vertical separator line
+    if (col >= win_split_width(wp))	// In vertical separator line
 	return IN_SEP_LINE;
 
     if (wp != curwin)
@@ -1287,7 +1287,7 @@ do_mousescroll(cmdarg_T *cap)
     {
 	// Horizontal scrolling
 	long step = (mouse_hor_step < 0 || shift_or_ctrl)
-					    ? curwin->w_width : mouse_hor_step;
+					    ? win_display_width(curwin) : mouse_hor_step;
 	long leftcol = curwin->w_leftcol
 				     + (cap->arg == MSCR_RIGHT ? -step : step);
 	if (leftcol < 0)
@@ -2137,9 +2137,9 @@ retnomove:
 	}
 	else
 	    on_status_line = 0;
-	if (col >= wp->w_width)		// In separator line
+	if (col >= win_split_width(wp))		// In separator line
 	{
-	    on_sep_line = col - wp->w_width + 1;
+	    on_sep_line = col - win_split_width(wp) + 1;
 	    dragwin = wp;
 	}
 	else
@@ -2163,7 +2163,7 @@ retnomove:
 #ifdef FEAT_FOLDING
 			&& (
 # ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? col < wp->w_width - wp->w_p_fdc :
+			    wp->w_p_rl ? col < win_split_width(wp) - wp->w_p_fdc :
 # endif
 			    col >= wp->w_p_fdc + (wp != cmdwin_win ? 0 : 1)
 			    )
@@ -2253,7 +2253,7 @@ retnomove:
 	if (dragwin != NULL)
 	{
 	    // Drag the separator column
-	    count = col - dragwin->w_wincol - dragwin->w_width + 1
+	    count = col - dragwin->w_wincol - win_split_width(dragwin) + 1
 								- on_sep_line;
 	    win_drag_vsep_line(dragwin, count);
 	    did_drag |= count;
@@ -2415,7 +2415,7 @@ retnomove:
     // Check for position outside of the fold column.
     if (
 # ifdef FEAT_RIGHTLEFT
-	    curwin->w_p_rl ? col < curwin->w_width - curwin->w_p_fdc :
+	    curwin->w_p_rl ? col < win_split_width(curwin) - curwin->w_p_fdc :
 # endif
 	    col >= curwin->w_p_fdc + (cmdwin_win != curwin ? 0 : 1)
        )
@@ -3353,7 +3353,7 @@ mouse_comp_pos(
 
 #ifdef FEAT_RIGHTLEFT
     if (win->w_p_rl)
-	col = win->w_width - 1 - col;
+	col = win_split_width(win) - 1 - col;
 #endif
 
     lnum = win->w_topline;
@@ -3392,7 +3392,7 @@ mouse_comp_pos(
 
 	if (win->w_skipcol > 0 && lnum == win->w_topline)
 	{
-	    int width1 = win->w_width - win_col_off(win);
+	    int width1 = win_text_width(win);
 
 	    if (width1 > 0)
 	    {
@@ -3430,7 +3430,7 @@ mouse_comp_pos(
 	off = win_col_off(win) - win_col_off2(win);
 	if (col < off)
 	    col = off;
-	col += row * (win->w_width - off);
+	col += row * (win_display_width(win) - off);
 
 	// Add skip column for the topline.
 	if (lnum == win->w_topline)
@@ -3619,7 +3619,7 @@ f_getmousepos(typval_T *argvars UNUSED, typval_T *rettv)
 	    wincol = col + 1;
 	    row -= top_off;
 	    col -= left_off;
-	    if (row >= 0 && row < wp->w_height && col >= 0 && col < wp->w_width)
+	    if (row >= 0 && row < wp->w_height && col >= 0 && col < win_split_width(wp))
 	    {
 		(void)mouse_comp_pos(wp, &row, &col, &lnum, NULL);
 		col = vcol2col(wp, lnum, col, &coladd);

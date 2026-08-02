@@ -2358,12 +2358,12 @@ nv_screengo(oparg_T *oap, int dir, long dist)
 
     col_off1 = curwin_col_off();
     col_off2 = col_off1 - curwin_col_off2();
-    width1 = curwin->w_width - col_off1;
-    width2 = curwin->w_width - col_off2;
+    width1 = win_display_width(curwin) - col_off1;
+    width2 = win_display_width(curwin) - col_off2;
     if (width2 == 0)
 	width2 = 1; // avoid divide by zero
 
-    if (curwin->w_width != 0)
+    if (win_display_width(curwin) != 0)
     {
       // Instead of sticking at the last character of the buffer line we
       // try to stick in the last column of the screen.
@@ -2742,7 +2742,7 @@ nv_zet(cmdarg_T *cap)
 
 		// "zH" - scroll screen right half-page
     case 'H':
-		cap->count1 *= curwin->w_width / 2;
+		cap->count1 *= win_display_width(curwin) / 2;
 		// FALLTHROUGH
 
 		// "zh" - scroll screen to the right
@@ -2754,7 +2754,7 @@ nv_zet(cmdarg_T *cap)
 		break;
 
 		// "zL" - scroll window left half-page
-    case 'L':	cap->count1 *= curwin->w_width / 2;
+    case 'L':	cap->count1 *= win_display_width(curwin) / 2;
 		// FALLTHROUGH
 
 		// "zl" - scroll window to the left if not wrapping
@@ -2794,7 +2794,7 @@ nv_zet(cmdarg_T *cap)
 		    else
 #endif
 		    getvcol(curwin, &curwin->w_cursor, NULL, NULL, &col, 0);
-		    n = curwin->w_width - curwin_col_off();
+		    n = win_text_width(curwin);
 		    if ((long)col + siso < n)
 			col = 0;
 		    else if (siso - n < INT_MAX - col)
@@ -5816,9 +5816,9 @@ nv_g_home_m_cmd(cmdarg_T *cap)
 
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = FALSE;
-    if (curwin->w_p_wrap && curwin->w_width != 0)
+    if (curwin->w_p_wrap && win_display_width(curwin) != 0)
     {
-	int	width1 = curwin->w_width - curwin_col_off();
+	int	width1 = win_text_width(curwin);
 	int	width2 = width1 + curwin_col_off2();
 	int	virtcol;
 
@@ -5836,7 +5836,7 @@ nv_g_home_m_cmd(cmdarg_T *cap)
 	// that skipcol is not adjusted later.
 	if (curwin->w_skipcol > 0 && curwin->w_cursor.lnum == curwin->w_topline)
 	{
-	    int overlap = sms_marker_overlap(curwin, curwin->w_width - width2);
+	    int overlap = sms_marker_overlap(curwin, win_display_width(curwin) - width2);
 	    if (overlap > 0 && i == curwin->w_skipcol)
 		i += overlap;
 	}
@@ -5847,7 +5847,7 @@ nv_g_home_m_cmd(cmdarg_T *cap)
     // 'relativenumber' is on and lines are wrapping the middle can be more
     // to the left.
     if (cap->nchar == 'm')
-	i += (curwin->w_width - curwin_col_off()
+	i += (win_text_width(curwin)
 		+ ((curwin->w_p_wrap && i > 0)
 		    ? curwin_col_off2() : 0)) / 2;
     coladvance((colnr_T)i);
@@ -5919,12 +5919,12 @@ nv_g_dollar_cmd(cmdarg_T *cap)
 
     oap->motion_type = MCHAR;
     oap->inclusive = TRUE;
-    if (curwin->w_p_wrap && curwin->w_width != 0)
+    if (curwin->w_p_wrap && win_display_width(curwin) != 0)
     {
 	curwin->w_curswant = MAXCOL;    // so we stay at the end
 	if (cap->count1 == 1)
 	{
-	    int		width1 = curwin->w_width - col_off;
+	    int		width1 = win_display_width(curwin) - col_off;
 	    int		width2 = width1 + curwin_col_off2();
 	    int		virtcol;
 
@@ -5964,7 +5964,7 @@ nv_g_dollar_cmd(cmdarg_T *cap)
 	    // if it fails, let the cursor still move to the last char
 	    (void)cursor_down(cap->count1 - 1, FALSE);
 
-	i = curwin->w_leftcol + curwin->w_width - col_off - 1;
+	i = curwin->w_leftcol + win_display_width(curwin) - col_off - 1;
 	coladvance((colnr_T)i);
 
 	// if the character doesn't fit move one back
@@ -5974,7 +5974,7 @@ nv_g_dollar_cmd(cmdarg_T *cap)
 	    colnr_T vcol;
 
 	    getvvcol(curwin, &curwin->w_cursor, NULL, NULL, &vcol, 0);
-	    if (vcol >= curwin->w_leftcol + curwin->w_width - col_off)
+	    if (vcol >= curwin->w_leftcol + win_display_width(curwin) - col_off)
 		--curwin->w_cursor.col;
 	}
 

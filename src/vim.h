@@ -2583,6 +2583,24 @@ typedef int (*opt_expand_cb_T)(optexpand_T *args, int *numMatches, char_u ***mat
 #endif
 
 #include "globals.h"	    // global variables and messages
+
+int win_col_off(win_T *wp);
+
+static inline int win_split_width(win_T *wp)
+{
+    return wp->w_width;
+}
+
+static inline int win_text_width(win_T *wp)
+{
+    return wp->w_width - win_col_off(wp);
+}
+
+static inline int win_display_width(win_T *wp)
+{
+    return wp->w_width;
+}
+
 #include "errors.h"	    // error messages
 
 /*

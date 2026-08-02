@@ -1656,7 +1656,7 @@ window_set_height(VALUE self, VALUE height)
     static VALUE
 window_width(VALUE self UNUSED)
 {
-    return INT2NUM(get_win(self)->w_width);
+    return INT2NUM(win_split_width(get_win(self)));
 }
 
     static VALUE

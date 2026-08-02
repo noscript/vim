@@ -4704,7 +4704,7 @@ WindowAttr(WindowObject *self, char *name)
     else if (strcmp(name, "row") == 0)
 	return PyLong_FromLong((long)(self->win->w_winrow));
     else if (strcmp(name, "width") == 0)
-	return PyLong_FromLong((long)(self->win->w_width));
+	return PyLong_FromLong((long)(win_split_width(self->win)));
     else if (strcmp(name, "col") == 0)
 	return PyLong_FromLong((long)(self->win->w_wincol));
     else if (strcmp(name, "vars") == 0)

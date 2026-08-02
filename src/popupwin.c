@@ -420,7 +420,7 @@ popup_drag(win_T *wp)
 
 	if (width_inc != 0)
 	{
-	    int width = wp->w_width + width_inc;
+	    int width = win_split_width(wp) + width_inc;
 
 	    if (width < 1)
 		width = 1;
@@ -1573,7 +1573,7 @@ popup_width(win_T *wp)
 {
     // w_leftcol is how many columns of the core are left of the screen
     // w_popup_rightoff is how many columns of the core are right of the screen
-    return wp->w_width + wp->w_leftcol
+    return win_split_width(wp) + wp->w_leftcol
 	    + popup_extra_width(wp)
 	    + wp->w_popup_rightoff;
 }
@@ -1764,7 +1764,7 @@ popup_compute_clip(win_T *wp, popup_clip_T *cl)
 	h = 0;
     cl->eff_height = cl->eff_top_extra + h + cl->eff_bot_extra;
 
-    w = wp->w_width - cl->clip_left_content - cl->clip_right_content;
+    w = win_split_width(wp) - cl->clip_left_content - cl->clip_right_content;
     if (w < 0)
 	w = 0;
     cl->eff_width = cl->eff_left_extra + w + cl->eff_right_extra;
@@ -2142,7 +2142,7 @@ typedef struct {
 popup_geom_save(win_T *wp, popup_geom_save_T *sv)
 {
     sv->height  = wp->w_height;
-    sv->width   = wp->w_width;
+    sv->width   = win_split_width(wp);
     sv->winrow  = wp->w_winrow;
     sv->wincol  = wp->w_wincol;
     sv->leftcol = wp->w_leftcol;
@@ -2268,9 +2268,9 @@ popup_compute_clipwindow_offsets(win_T *wp)
     popup_top = wp->w_winrow;
     popup_bottom = wp->w_winrow + wp->w_height + extra_h;
     popup_left = wp->w_wincol;
-    popup_right = wp->w_wincol + wp->w_width + extra_w;
+    popup_right = wp->w_wincol + win_split_width(wp) + extra_w;
     total_h = wp->w_height + extra_h;
-    total_w = wp->w_width + extra_w;
+    total_w = win_split_width(wp) + extra_w;
 
     if (popup_top < cw->w_winrow)
 	wp->w_popup_topoff = cw->w_winrow - popup_top;
@@ -2278,8 +2278,8 @@ popup_compute_clipwindow_offsets(win_T *wp)
 	wp->w_popup_bottomoff = popup_bottom - (cw->w_winrow + cw->w_height);
     if (popup_left < cw->w_wincol)
 	wp->w_popup_leftclip = cw->w_wincol - popup_left;
-    if (popup_right > cw->w_wincol + cw->w_width)
-	wp->w_popup_rightclip = popup_right - (cw->w_wincol + cw->w_width);
+    if (popup_right > cw->w_wincol + win_split_width(cw))
+	wp->w_popup_rightclip = popup_right - (cw->w_wincol + win_split_width(cw));
 
     return wp->w_popup_topoff >= total_h
 	|| wp->w_popup_bottomoff >= total_h
@@ -2323,7 +2323,7 @@ popup_apply_winupdate_clip(win_T *wp, popup_clip_T *cl)
 	if (cl->clip_right_content > 0)
 	{
 	    wp->w_width -= cl->clip_right_content;
-	    if (wp->w_width < 0)
+	    if (win_split_width(wp) < 0)
 		wp->w_width = 0;
 	}
 	if (cl->clip_left_content > 0)
@@ -2331,7 +2331,7 @@ popup_apply_winupdate_clip(win_T *wp, popup_clip_T *cl)
 	    wp->w_leftcol += cl->clip_left_content;
 	    wp->w_wincol += cl->clip_left_content;
 	    wp->w_width -= cl->clip_left_content;
-	    if (wp->w_width < 0)
+	    if (win_split_width(wp) < 0)
 		wp->w_width = 0;
 	}
     }
@@ -2615,9 +2615,9 @@ popup_adjust_position(win_T *wp)
     // stays stable when scrolling changes which lines are visible.
     {
 	linenr_T ln;
-	int saved_w_width = wp->w_width;
+	int saved_w_width = win_split_width(wp);
 
-	if (wp->w_width < maxwidth)
+	if (win_split_width(wp) < maxwidth)
 	    wp->w_width = maxwidth;
 	for (ln = 1; ln <= wp->w_buffer->b_ml.ml_line_count; ++ln)
 	{
@@ -2639,12 +2639,12 @@ popup_adjust_position(win_T *wp)
     while (lnum >= 1 && lnum <= wp->w_buffer->b_ml.ml_line_count)
     {
 	int len;
-	int w_width = wp->w_width;
+	int w_width = win_split_width(wp);
 
 	// Count Tabs for what they are worth and compute the length based on
 	// the maximum width (matters when 'showbreak' is set).
 	// "margin_width" is added to "len" where it matters.
-	if (wp->w_width < maxwidth)
+	if (win_split_width(wp) < maxwidth)
 	    wp->w_width = maxwidth;
 	len = linetabsize(wp, lnum);
 	wp->w_width = w_width;
@@ -2687,10 +2687,10 @@ popup_adjust_position(win_T *wp)
 		used_maxwidth = TRUE;
 	    }
 	}
-	if (wp->w_width < len + margin_width)
+	if (win_split_width(wp) < len + margin_width)
 	{
 	    wp->w_width = len + margin_width;
-	    if (wp->w_maxwidth > 0 && wp->w_width > wp->w_maxwidth)
+	    if (wp->w_maxwidth > 0 && win_split_width(wp) > wp->w_maxwidth)
 		wp->w_width = wp->w_maxwidth;
 	}
 
@@ -2727,7 +2727,7 @@ popup_adjust_position(win_T *wp)
 	// make space for the scrollbar if needed, when lines wrap and when
 	// applying minwidth
 	if (maxwidth + right_extra >= maxspace
-		&& (used_maxwidth || (minwidth > 0 && wp->w_width < minwidth)))
+		&& (used_maxwidth || (minwidth > 0 && win_split_width(wp) < minwidth)))
 	    maxwidth -= wp->w_popup_padding[1] + 1;
     }
 
@@ -2739,20 +2739,20 @@ popup_adjust_position(win_T *wp)
 	    minwidth = title_len;
     }
 
-    if (minwidth > 0 && wp->w_width < minwidth)
+    if (minwidth > 0 && win_split_width(wp) < minwidth)
 	wp->w_width = minwidth;
-    if (wp->w_width > maxwidth)
+    if (win_split_width(wp) > maxwidth)
     {
-	if (wp->w_width > maxspace && !wp->w_p_wrap)
+	if (win_split_width(wp) > maxspace && !wp->w_p_wrap)
 	    // some columns cut off on the right
-	    wp->w_popup_rightoff = wp->w_width - maxspace;
+	    wp->w_popup_rightoff = win_split_width(wp) - maxspace;
 
 	// If the window doesn't fit because 'minwidth' is set then the
 	// scrollbar is at the far right of the screen, use the size without
 	// the scrollbar.
 	if (wp->w_has_scrollbar && wp->w_minwidth > 0)
 	{
-	    int off = wp->w_width - maxwidth;
+	    int off = win_split_width(wp) - maxwidth;
 	    extra_width -= MIN(off, right_extra);
 	    wp->w_width = maxwidth_no_scrollbar;
 	}
@@ -2767,14 +2767,14 @@ popup_adjust_position(win_T *wp)
     if (center_hor)
     {
 	wp->w_wincol = firstwin->w_wincol
-		    + (topframe->fr_width - wp->w_width - extra_width) / 2;
+		    + (topframe->fr_width - win_split_width(wp) - extra_width) / 2;
 	if (wp->w_wincol < firstwin->w_wincol)
 	    wp->w_wincol = firstwin->w_wincol;
     }
     else if (wp->w_popup_pos == POPPOS_BOTRIGHT
 	    || wp->w_popup_pos == POPPOS_TOPRIGHT)
     {
-	int leftoff = wantcol - (wp->w_width + extra_width);
+	int leftoff = wantcol - (win_split_width(wp) + extra_width);
 
 	// Right aligned: move to the right if needed.
 	// No truncation, because that would change the height.
@@ -2789,7 +2789,7 @@ popup_adjust_position(win_T *wp)
 		wp->w_leftcol = -leftoff - left_extra;
 	    wp->w_width -= wp->w_leftcol;
 	    wp->w_popup_leftoff = -leftoff;
-	    if (wp->w_width < 0)
+	    if (win_split_width(wp) < 0)
 		wp->w_width = 0;
 	}
     }
@@ -2801,7 +2801,7 @@ popup_adjust_position(win_T *wp)
 	int want_col = 0;
 
 	// try to show the right border and any scrollbar
-	want_col = left_extra + wp->w_width + right_extra;
+	want_col = left_extra + win_split_width(wp) + right_extra;
 	if (want_col > 0 && wp->w_wincol > 0
 					 && wp->w_wincol + want_col >= firstwin->w_wincol + topframe->fr_width)
 	{
@@ -2907,10 +2907,10 @@ popup_adjust_position(win_T *wp)
     else if (wp->w_winrow < 0 && !(wp->w_popup_flags & POPF_CLIPWINDOW))
 	wp->w_winrow = 0;
 
-    if (wp->w_wincol + wp->w_width + extra_width
+    if (wp->w_wincol + win_split_width(wp) + extra_width
 				    > firstwin->w_wincol + topframe->fr_width)
 	wp->w_wincol = firstwin->w_wincol + topframe->fr_width
-						- wp->w_width - extra_width;
+						- win_split_width(wp) - extra_width;
     if (wp->w_wincol < firstwin->w_wincol)
 	wp->w_wincol = firstwin->w_wincol;
     if (wp->w_wincol < 0)
@@ -2919,7 +2919,7 @@ popup_adjust_position(win_T *wp)
     // the work area between tabpanels), clip the content width so the right
     // border/padding/shadow stays visible instead of being pushed off the
     // screen or into the tabpanel.
-    if (wp->w_wincol + wp->w_width + extra_width
+    if (wp->w_wincol + win_split_width(wp) + extra_width
 				    > firstwin->w_wincol + topframe->fr_width)
     {
 	int avail = firstwin->w_wincol + topframe->fr_width
@@ -2998,7 +2998,7 @@ popup_adjust_position(win_T *wp)
 	wp->w_popup_prop_topline = wp->w_popup_prop_win->w_topline;
 	wp->w_popup_prop_winrow = wp->w_popup_prop_win->w_winrow;
 	wp->w_popup_prop_wincol = wp->w_popup_prop_win->w_wincol;
-	wp->w_popup_prop_width = wp->w_popup_prop_win->w_width;
+	wp->w_popup_prop_width = win_split_width(wp->w_popup_prop_win);
 	wp->w_popup_prop_winheight = wp->w_popup_prop_win->w_height;
     }
 
@@ -4736,7 +4736,7 @@ popup_save_layout(win_T *wp, popup_layout_T *layout)
 {
     layout->winrow = wp->w_winrow;
     layout->wincol = wp->w_wincol;
-    layout->width = wp->w_width;
+    layout->width = win_split_width(wp);
     layout->height = wp->w_height;
     layout->leftcol = wp->w_leftcol;
     layout->leftoff = wp->w_popup_leftoff;
@@ -4757,7 +4757,7 @@ popup_layout_changed(win_T *wp, popup_layout_T *layout)
 	|| layout->wincol != wp->w_wincol
 	|| layout->leftcol != wp->w_leftcol
 	|| layout->leftoff != wp->w_popup_leftoff
-	|| layout->width != wp->w_width
+	|| layout->width != win_split_width(wp)
 	|| layout->height != wp->w_height
 	|| layout->has_scrollbar != wp->w_has_scrollbar
 	|| layout->topoff != wp->w_popup_topoff
@@ -5022,7 +5022,7 @@ popup_save_padding_screen(win_T *wp, popup_saved_screen_T *saved_screen)
     saved_screen->start_col = wp->w_wincol + wp->w_popup_border[3];
     saved_screen->rows = wp->w_popup_padding[0] + wp->w_height
 						    + wp->w_popup_padding[2];
-    saved_screen->cols = wp->w_popup_padding[3] + wp->w_width
+    saved_screen->cols = wp->w_popup_padding[3] + win_split_width(wp)
 						    + wp->w_popup_padding[1];
 
     // Include one column to the left to handle wide chars that overlap the
@@ -5276,14 +5276,14 @@ f_popup_getpos(typval_T *argvars, typval_T *rettv)
 
     dict_add_number(dict, "line", wp->w_winrow + 1);
     dict_add_number(dict, "col", wp->w_wincol + 1);
-    dict_add_number(dict, "width", wp->w_width + left_extra
+    dict_add_number(dict, "width", win_split_width(wp) + left_extra
 	    + wp->w_popup_border[1] + wp->w_popup_padding[1]);
     dict_add_number(dict, "height", wp->w_height + top_extra
 	    + wp->w_popup_border[2] + wp->w_popup_padding[2]);
 
     dict_add_number(dict, "core_line", wp->w_winrow + 1 + top_extra);
     dict_add_number(dict, "core_col", wp->w_wincol + 1 + left_extra);
-    dict_add_number(dict, "core_width", wp->w_width);
+    dict_add_number(dict, "core_width", win_split_width(wp));
     dict_add_number(dict, "core_height", wp->w_height);
 
     dict_add_number(dict, "scrollbar", wp->w_has_scrollbar);
@@ -6091,7 +6091,7 @@ popup_need_position_adjust(win_T *wp)
 	       || wp->w_popup_prop_topline != wp->w_popup_prop_win->w_topline
 	       || wp->w_popup_prop_winrow != wp->w_popup_prop_win->w_winrow
 	       || wp->w_popup_prop_wincol != wp->w_popup_prop_win->w_wincol
-	       || wp->w_popup_prop_width != wp->w_popup_prop_win->w_width
+	       || wp->w_popup_prop_width != win_split_width(wp->w_popup_prop_win)
 	       || wp->w_popup_prop_winheight != wp->w_popup_prop_win->w_height))
 	return TRUE;
 
@@ -6510,7 +6510,7 @@ may_update_popup_mask(int type)
 
 			    // This line is going to be redrawn, no need to
 			    // check until the right side of the window.
-			    col_done = wp->w_wincol + wp->w_width - 1;
+			    col_done = wp->w_wincol + win_split_width(wp) - 1;
 			}
 		    }
 		}
@@ -7801,7 +7801,7 @@ update_popups(void (*win_update)(win_T *wp))
 	    if (do_padding && cl.eff_padding[1] > 0)
 	    {
 		int pad_col_start = wincol + wp->w_popup_border[3]
-			+ wp->w_popup_padding[3] + wp->w_width + wp->w_leftcol;
+			+ wp->w_popup_padding[3] + win_split_width(wp) + wp->w_leftcol;
 		int pad_col_end = pad_col_start + wp->w_popup_padding[1];
 
 		if (screen_opacity_popup != NULL && saved_screen.lines != NULL)

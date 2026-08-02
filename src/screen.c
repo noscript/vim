@@ -160,8 +160,8 @@ screen_fill_end(
 {
     int	    nn = off + width;
 
-    if (nn > wp->w_width)
-	nn = wp->w_width;
+    if (nn > win_split_width(wp))
+	nn = win_split_width(wp);
 #ifdef FEAT_RIGHTLEFT
     if (wp->w_p_rl)
     {
@@ -253,7 +253,7 @@ win_draw_end(
 compute_foldcolumn(win_T *wp, int col)
 {
     int wmw = wp == curwin && p_wmw == 0 ? 1 : p_wmw;
-    int n = wp->w_width - (col + wmw);
+    int n = win_split_width(wp) - (col + wmw);
 
     return MIN(wp->w_p_fdc, n);
 }
@@ -1450,7 +1450,7 @@ win_redr_custom(
 	row = statusline_row(wp);
 	fillchar = fillchar_status(&attr, wp);
 	int in_status_line = wp->w_status_height != 0;
-	maxwidth = in_status_line ? wp->w_width : cmdline_width;
+	maxwidth = in_status_line ? win_split_width(wp) : cmdline_width;
 
 	if (draw_ruler)
 	{
@@ -2744,7 +2744,7 @@ redraw_block(int row, int end, win_T *wp)
     else
     {
 	col = wp->w_wincol;
-	width = wp->w_width;
+	width = win_split_width(wp);
     }
     screen_draw_rectangle(row, col, end - row, width, FALSE);
 }
@@ -3718,24 +3718,24 @@ linecopy(int to, int from, win_T *wp)
     unsigned	off_from = LineOffset[from] + wp->w_wincol;
 
     mch_memmove(ScreenLines + off_to, ScreenLines + off_from,
-	    wp->w_width * sizeof(schar_T));
+	    win_split_width(wp) * sizeof(schar_T));
     if (enc_utf8)
     {
 	int	i;
 
 	mch_memmove(ScreenLinesUC + off_to, ScreenLinesUC + off_from,
-		wp->w_width * sizeof(u8char_T));
+		win_split_width(wp) * sizeof(u8char_T));
 	for (i = 0; i < p_mco; ++i)
 	    mch_memmove(ScreenLinesC[i] + off_to, ScreenLinesC[i] + off_from,
-		    wp->w_width * sizeof(u8char_T));
+		    win_split_width(wp) * sizeof(u8char_T));
     }
     if (enc_dbcs == DBCS_JPNU)
 	mch_memmove(ScreenLines2 + off_to, ScreenLines2 + off_from,
-		wp->w_width * sizeof(schar_T));
+		win_split_width(wp) * sizeof(schar_T));
     mch_memmove(ScreenAttrs + off_to, ScreenAttrs + off_from,
-	    wp->w_width * sizeof(sattr_T));
+	    win_split_width(wp) * sizeof(sattr_T));
     mch_memmove(ScreenCols + off_to, ScreenCols + off_from,
-	    wp->w_width * sizeof(colnr_T));
+	    win_split_width(wp) * sizeof(colnr_T));
 }
 
 /*
@@ -4069,7 +4069,7 @@ setcursor_mayforce(int force)
 #ifdef FEAT_RIGHTLEFT
 		// With 'rightleft' set and the cursor on a double-wide
 		// character, position it on the leftmost column.
-		curwin->w_p_rl ? ((int)curwin->w_width - curwin->w_wcol
+		curwin->w_p_rl ? ((int)win_split_width(curwin) - curwin->w_wcol
 					    - cursor_screen_cells()) :
 #endif
 					    curwin->w_wcol));
@@ -4240,7 +4240,7 @@ win_do_lines(
 
     // only a few lines left: redraw is faster
     if (mayclear && Rows - line_count < 5
-	    && wp->w_width == topframe->fr_width)
+	    && win_split_width(wp) == topframe->fr_width)
     {
 	if (!no_win_do_lines_ins)
 	    redraw_as_cleared();    // don't clear the screen to avoid flicker
@@ -4285,9 +4285,9 @@ win_do_lines(
      * a character in the lower right corner of the scroll region may cause a
      * scroll-up .
      */
-    if (scroll_region || wp->w_width != topframe->fr_width)
+    if (scroll_region || win_split_width(wp) != topframe->fr_width)
     {
-	if (scroll_region && (wp->w_width == topframe->fr_width
+	if (scroll_region && (win_split_width(wp) == topframe->fr_width
 		    || *T_CSV != NUL))
 	    scroll_region_set(wp, row);
 	if (del)
@@ -4296,7 +4296,7 @@ win_do_lines(
 	else
 	    retval = screen_ins_lines(W_WINROW(wp) + row, 0, line_count,
 					   wp->w_height - row, clear_attr, wp);
-	if (scroll_region && (wp->w_width == topframe->fr_width
+	if (scroll_region && (win_split_width(wp) == topframe->fr_width
 		    || *T_CSV != NUL))
 	    scroll_region_reset();
 	return retval;
@@ -4420,7 +4420,7 @@ screen_ins_lines(
      * exists.
      */
     result_empty = (row + line_count >= end);
-    if (wp != NULL && wp->w_width != topframe->fr_width && *T_CSV == NUL)
+    if (wp != NULL && win_split_width(wp) != topframe->fr_width && *T_CSV == NUL)
     {
 	// Avoid that lines are first cleared here and then redrawn, which
 	// results in many characters updated twice.  This happens with CTRL-F
@@ -4466,7 +4466,7 @@ screen_ins_lines(
 #ifdef FEAT_CLIPBOARD
     // Remove a modeless selection when inserting lines halfway the screen
     // or not the full width of the screen.
-    if (off + row > 0 || (wp != NULL && wp->w_width != topframe->fr_width))
+    if (off + row > 0 || (wp != NULL && win_split_width(wp) != topframe->fr_width))
 	clip_clear_selection(&clip_star);
     else
 	clip_scroll_selection(-line_count);
@@ -4498,7 +4498,7 @@ screen_ins_lines(
     end += off;
     for (i = 0; i < line_count; ++i)
     {
-	if (wp != NULL && wp->w_width != topframe->fr_width)
+	if (wp != NULL && win_split_width(wp) != topframe->fr_width)
 	{
 	    // need to copy part of a line
 	    j = end - 1 - i;
@@ -4507,9 +4507,9 @@ screen_ins_lines(
 	    j += line_count;
 	    if (can_clear((char_u *)" "))
 		lineclear(LineOffset[j] + wp->w_wincol,
-			wp->w_width, clear_attr);
+			win_split_width(wp), clear_attr);
 	    else
-		lineinvalid(LineOffset[j] + wp->w_wincol, wp->w_width);
+		lineinvalid(LineOffset[j] + wp->w_wincol, win_split_width(wp));
 	    LineWraps[j] = FALSE;
 	}
 	else
@@ -4659,7 +4659,7 @@ screen_del_lines(
      * 5. Use T_DL (delete line) if it exists.
      * 6. redraw the characters from ScreenLines[].
      */
-    if (wp != NULL && wp->w_width != topframe->fr_width && *T_CSV == NUL)
+    if (wp != NULL && win_split_width(wp) != topframe->fr_width && *T_CSV == NUL)
     {
 	// Avoid that lines are first cleared here and then redrawn, which
 	// results in many characters updated twice.  This happens with CTRL-F
@@ -4682,7 +4682,7 @@ screen_del_lines(
     else if (*T_CDL != NUL && line_count > 1 && can_delete)
 	type = USE_T_CDL;
     else if (can_clear(T_CE) && result_empty
-	    && (wp == NULL || wp->w_width == topframe->fr_width))
+	    && (wp == NULL || win_split_width(wp) == topframe->fr_width))
 	type = USE_T_CE;
     else if (*T_DL != NUL && can_delete)
 	type = USE_T_DL;
@@ -4694,7 +4694,7 @@ screen_del_lines(
 #ifdef FEAT_CLIPBOARD
     // Remove a modeless selection when deleting lines halfway the screen or
     // not the full width of the screen.
-    if (off + row > 0 || (wp != NULL && wp->w_width != topframe->fr_width))
+    if (off + row > 0 || (wp != NULL && win_split_width(wp) != topframe->fr_width))
 	clip_clear_selection(&clip_star);
     else
 	clip_scroll_selection(line_count);
@@ -4733,7 +4733,7 @@ screen_del_lines(
     end += off;
     for (i = 0; i < line_count; ++i)
     {
-	if (wp != NULL && wp->w_width != topframe->fr_width)
+	if (wp != NULL && win_split_width(wp) != topframe->fr_width)
 	{
 	    // need to copy part of a line
 	    j = row + i;
@@ -4742,9 +4742,9 @@ screen_del_lines(
 	    j -= line_count;
 	    if (can_clear((char_u *)" "))
 		lineclear(LineOffset[j] + wp->w_wincol,
-			wp->w_width, clear_attr);
+			win_split_width(wp), clear_attr);
 	    else
-		lineinvalid(LineOffset[j] + wp->w_wincol, wp->w_width);
+		lineinvalid(LineOffset[j] + wp->w_wincol, win_split_width(wp));
 	    LineWraps[j] = FALSE;
 	}
 	else

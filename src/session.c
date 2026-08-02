@@ -265,9 +265,9 @@ ses_winsizes(
 		return FAIL;
 
 	    // restore width when not full width
-	    if (wp->w_width < Columns && (fprintf(fd,
+	    if (win_split_width(wp) < Columns && (fprintf(fd,
 		   "exe 'vert :%dresize ' .. ((&columns * %ld + %ld) / %ld)",
-			    n, (long)wp->w_width, Columns / 2, Columns) < 0
+			    n, (long)win_split_width(wp), Columns / 2, Columns) < 0
 						  || put_eol(fd) == FAIL))
 		return FAIL;
 	}
@@ -499,13 +499,13 @@ put_view(
 	}
 	else
 	{
-	    if (!wp->w_p_wrap && wp->w_leftcol > 0 && wp->w_width > 0)
+	    if (!wp->w_p_wrap && wp->w_leftcol > 0 && win_split_width(wp) > 0)
 	    {
 		if (fprintf(fd,
 			  "  var c: number = %ld - ((%ld * winwidth(0) + %ld) / %ld)",
 			    (long)wp->w_virtcol + 1,
 			    (long)(wp->w_virtcol - wp->w_leftcol),
-			    (long)wp->w_width / 2, (long)wp->w_width) < 0
+			    (long)win_split_width(wp) / 2, (long)win_split_width(wp)) < 0
 			|| put_eol(fd) == FAIL
 			|| put_line(fd, "  if c > 0") == FAIL
 			|| fprintf(fd,
