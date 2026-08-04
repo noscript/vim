@@ -2954,4 +2954,3 @@ trim_to_int(vimlong_T x)
 {
     return x > INT_MAX ? INT_MAX : x < INT_MIN ? INT_MIN : x;
 }
-

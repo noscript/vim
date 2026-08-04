@@ -1532,8 +1532,15 @@ fold_line(
     }
 # endif
 
-    screen_line(wp, row + W_WINROW(wp), wp->w_wincol, win_split_width(wp), win_split_width(wp),
-	    -1, 0);
+    screen_line(wp, row + W_WINROW(wp), wp->w_wincol,
+# ifdef FEAT_RIGHTLEFT
+	    wp->w_p_rl ? wp->w_p_rmar - 1 :
+# endif
+	    win_split_width(wp), win_split_width(wp), -1,
+# ifdef FEAT_RIGHTLEFT
+	    wp->w_p_rl ? SLF_RIGHTLEFT :
+# endif
+	    0);
 
     // Update w_cline_height and w_cline_folded if the cursor line was
     // updated (saves a call to plines() later).

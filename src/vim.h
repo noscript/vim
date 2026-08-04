@@ -2593,12 +2593,12 @@ static inline int win_split_width(win_T *wp)
 
 static inline int win_text_width(win_T *wp)
 {
-    return wp->w_width - win_col_off(wp);
+    return wp->w_width - win_col_off(wp) - wp->w_p_rmar;
 }
 
 static inline int win_display_width(win_T *wp)
 {
-    return wp->w_width;
+    return MAX(wp->w_width - wp->w_p_rmar, 0);
 }
 
 #include "errors.h"	    // error messages

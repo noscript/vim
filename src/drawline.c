@@ -580,7 +580,7 @@ handle_showbreak_and_filler(win_T *wp, winlinevars_T *wlv)
 	}
 #  ifdef FEAT_RIGHTLEFT
 	if (wp->w_p_rl)
-	    wlv->n_extra = wlv->col + 1;
+	    wlv->n_extra = wlv->col - wp->w_p_rmar + 1;
 	else
 #  endif
 	    wlv->n_extra = win_display_width(wp) - wlv->col;
@@ -720,7 +720,11 @@ text_prop_position(
 	    // Below-align: empty line add one character
 	    if (below && vcol == 0 && col_with_padding == col_off
 					    && win_display_width(wp) - col_off == before)
+	    {
 		col_with_padding += 1;
+		if (padding + cells >= before - win_col_off2(wp))
+		    before = 0;
+	    }
 
 	    if (before < 0
 		    || !(right || below)
@@ -970,7 +974,7 @@ draw_screen_line(win_T *wp, winlinevars_T *wlv)
 
 	while (
 # ifdef FEAT_RIGHTLEFT
-		wp->w_p_rl ? (wlv->col >= 0) :
+		wp->w_p_rl ? (wlv->col >= wp->w_p_rmar) :
 # endif
 		(wlv->col < win_display_width(wp)))
 	{
@@ -1771,6 +1775,7 @@ win_line(
 		if (text_props[i].tp_flags & TP_FLAG_ALIGN_ABOVE)
 		{
 		    if (lnum == wp->w_topline
+			    && text_width > 0
 			    && wp->w_skipcol - skipcol_in_text_prop_above
 								 >= text_width)
 		    {
@@ -2796,7 +2801,7 @@ win_line(
 		    // last column.
 		    if ((
 #ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col <= 0) :
+			    wp->w_p_rl ? (wlv.col <= wp->w_p_rmar) :
 #endif
 				    (wlv.col >= win_display_width(wp) - 1))
 			    && (*mb_char2cells)(mb_c) == 2)
@@ -3026,7 +3031,7 @@ win_line(
 		// next line.
 		if ((
 #ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col <= 0) :
+			    wp->w_p_rl ? (wlv.col <= wp->w_p_rmar) :
 #endif
 				(wlv.col >= win_display_width(wp) - 1))
 			&& (*mb_char2cells)(mb_c) == 2)
@@ -3502,7 +3507,7 @@ win_line(
 				&& VIsual_mode != Ctrl_V
 				&& (
 #ifdef FEAT_RIGHTLEFT
-				    wp->w_p_rl ? (wlv.col >= 0) :
+				    wp->w_p_rl ? (wlv.col >= wp->w_p_rmar) :
 #endif
 				    (wlv.col < win_display_width(wp)))
 				&& !(noinvcur
@@ -3617,7 +3622,7 @@ win_line(
 			 && wlv.vcol < wlv.tocol
 			 && (
 #ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col >= 0) :
+			    wp->w_p_rl ? (wlv.col >= wp->w_p_rmar) :
 #endif
 			    (wlv.col < win_split_width(wp))))
 		{
@@ -3635,7 +3640,7 @@ win_line(
 			    wlv.line_attr != 0
 			) && (
 # ifdef FEAT_RIGHTLEFT
-			    wp->w_p_rl ? (wlv.col >= 0) :
+			    wp->w_p_rl ? (wlv.col >= wp->w_p_rmar) :
 # endif
 			    (wlv.col
 # ifdef FEAT_CONCEAL
@@ -3982,7 +3987,7 @@ win_line(
 #ifdef FEAT_RIGHTLEFT
 		if (wp->w_p_rl)
 		{
-		    if (wlv.col < 0)
+		    if (wlv.col < wp->w_p_rmar)
 			n = 1;
 		}
 		else
@@ -4072,7 +4077,7 @@ win_line(
 #endif
 		&& (
 #ifdef FEAT_RIGHTLEFT
-		    wp->w_p_rl ? wlv.col == 0 :
+		    wp->w_p_rl ? wlv.col == wp->w_p_rmar :
 #endif
 		    wlv.col == win_display_width(wp) - 1)
 		&& (*ptr != NUL
@@ -4398,7 +4403,7 @@ win_line(
 	// so far.  If there is no more to display it is caught above.
 	if ((
 #ifdef FEAT_RIGHTLEFT
-	    wp->w_p_rl ? (wlv.col < 0) :
+	    wp->w_p_rl ? (wlv.col < wp->w_p_rmar) :
 #endif
 				    (wlv.col >= win_display_width(wp)))
 		&& (wlv.draw_state != WL_LINE
